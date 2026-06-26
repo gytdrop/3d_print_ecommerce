@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+/* ─── Tailwind Theme Extension ───────────────────────────────────────────── */
+@theme {
+  /* Dynamic font slots — resolved at runtime by layout.tsx */
+  --font-heading:        var(--font-heading);
+  --font-body:           var(--font-body);
+
+  /* Raw font CSS vars registered so Tailwind can reference them */
+  --font-quicksand:      var(--font-quicksand);
+  --font-nunito:         var(--font-nunito);
+  --font-playfair:       var(--font-playfair);
+  --font-inclusivesans:  var(--font-inclusivesans);
+  --font-fredoka:        var(--font-fredoka);
+  --font-lato:           var(--font-lato);
+
+  /* ── Semantic color tokens ── */
+  --color-page:            var(--bg-page);
+  --color-card:            var(--bg-card);
+  --color-on-page:         var(--text-on-page);
+  --color-on-card:         var(--text-on-card);
+  --color-accent:          var(--bg-accent);
+  --color-on-accent:       var(--text-on-accent);
+  --color-accent-muted:    var(--accent-muted);
+  --color-accent-glow:     var(--accent-glow);
+  --color-accent-hover:    var(--accent-hover);
+  --color-glass:           var(--bg-glass);
+  --color-glass-hover:     var(--bg-glass-hover);
+  --color-border-subtle:   var(--border-subtle);
+  --color-border-mid:      var(--border-mid);
+  --color-muted:           var(--text-muted);
+}
+
+
+/* ─── Base ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--bg-page);
+  color: var(--text-on-page);
+  font-family: var(--font-body), system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 999px; }
+
+/* ─── Glass Card ─────────────────────────────────────────────────────────── */
+.glass-card {
+  background: var(--bg-glass);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  color: var(--text-on-page);
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+.glass-card:hover { background: var(--bg-glass-hover); border-color: var(--border-mid); }
+.glass-card-accent:hover { border-color: var(--accent-glow); box-shadow: 0 0 24px var(--accent-muted); }
+
+/* ─── Gradient Text ──────────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--bg-accent) 0%, color-mix(in srgb, var(--bg-accent) 60%, #ffbe8c) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Accent Button ──────────────────────────────────────────────────────── */
+.btn-accent {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, var(--bg-accent) 0%, var(--accent-hover) 100%);
+  color: var(--text-on-accent, #ffffff);
+  font-family: var(--font-heading), sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 20px var(--accent-glow);
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+}
+.btn-accent::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.btn-accent:hover { transform: translateY(-2px); box-shadow: 0 8px 32px var(--accent-glow); }
+.btn-accent:hover::before { opacity: 1; }
+.btn-accent:active { transform: translateY(0); }
+
+/* ─── Ghost Button ───────────────────────────────────────────────────────── */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  color: var(--text-on-card);
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+.btn-ghost:hover { border-color: var(--border-mid); color: var(--text-on-page); background: var(--bg-glass); }
+
+/* ─── Badge ──────────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.badge-accent { background: var(--accent-muted); color: var(--bg-accent); border: 1px solid var(--accent-glow); }
+.badge-green  { background: rgba(34,197,94,0.12); color: var(--success); border: 1px solid rgba(34,197,94,0.25); }
+
+/* ─── Glow Effects ───────────────────────────────────────────────────────── */
+.glow-accent { box-shadow: 0 0 40px var(--accent-muted); }
+.text-glow-accent { text-shadow: 0 0 24px var(--accent-glow); }
+
+/* ─── Ambient Background ─────────────────────────────────────────────────── */
+.ambient-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.35;
+  animation: drift 22s ease-in-out infinite;
+}
+.ambient-orb-1 {
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--bg-accent) 18%, transparent) 0%, transparent 70%);
+  top: -200px; right: -100px; animation-delay: 0s;
+}
+.ambient-orb-2 {
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--bg-accent) 10%, transparent) 0%, transparent 70%);
+  bottom: -150px; left: -100px; animation-delay: -8s;
+}
+.ambient-orb-3 {
+  width: 400px; height: 400px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--bg-accent) 8%, transparent) 0%, transparent 70%);
+  top: 40%; left: 30%; animation-delay: -14s;
+}
+
+@keyframes drift {
+  0%,100% { transform: translate(0,0) scale(1); }
+  33%      { transform: translate(30px,-20px) scale(1.05); }
+  66%      { transform: translate(-20px,30px) scale(0.97); }
+}
+
+/* ─── Grid Pattern ───────────────────────────────────────────────────────── */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(128,128,128,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(128,128,128,0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ─── Section Divider ────────────────────────────────────────────────────── */
+.divider { height:1px; background:linear-gradient(90deg,transparent,var(--border-mid),transparent); }
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeInUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+@keyframes pulse-glow {
+  0%,100%{box-shadow:0 0 20px var(--accent-muted)}
+  50%    {box-shadow:0 0 40px var(--accent-glow)}
+}
+.animate-fade-in-up { animation:fadeInUp 0.6s ease forwards; }
+.animate-fade-in    { animation:fadeIn 0.4s ease forwards; }
+.animate-pulse-glow { animation:pulse-glow 3s ease-in-out infinite; }
+
+/* Staggered delays */
+.delay-100{animation-delay:0.1s;opacity:0} .delay-200{animation-delay:0.2s;opacity:0}
+.delay-300{animation-delay:0.3s;opacity:0} .delay-400{animation-delay:0.4s;opacity:0}
+.delay-500{animation-delay:0.5s;opacity:0} .delay-600{animation-delay:0.6s;opacity:0}
+
+/* ─── Typography ─────────────────────────────────────────────────────────── */
+/*
+   heading-display / heading-section:
+   - Always use the active --font-heading variable
+   - text-shadow adds a barely-there depth lift for mobile readability
+   - antialiased + tracking-tight enforced here at the class level
+*/
+.heading-display {
+  font-family: var(--font-heading), serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 0 1px rgba(0,0,0,0.04);
+}
+
+.heading-section {
+  font-family: var(--font-heading), serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* Dark palette override — headings on dark bg get a lifted light shadow */
+[data-palette="velvet-dusk"] .heading-display,
+[data-palette="velvet-dusk"] .heading-section {
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 2px rgba(0,0,0,0.2);
+  color: var(--text-on-page);
+}
+
+/* ─── Nav ─────────────────────────────────────────────────────────────────── */
+.nav-blur {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(var(--bg-page), 0.85);
+  border-bottom: 1px solid var(--border-subtle);
+}
+.nav-link { color:var(--text-on-card); font-size:14px; font-weight:500; transition:color 0.2s ease; text-decoration:none; }
+.nav-link:hover { color:var(--text-on-page); }
+.nav-link.active { color:var(--bg-accent); }
+
+/* --- Scrollbar utilities --- */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
