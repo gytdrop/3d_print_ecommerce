@@ -2,6 +2,55 @@
 
 Welcome! Follow these steps to get the project running locally after cloning the repo.
 
+> ⏩ **Just want it running?** Pick your OS below and paste the whole block into your terminal.
+
+---
+
+## ⚡ One-shot install (copy & paste)
+
+<details>
+<summary><b>🍎 macOS / 🐧 Linux</b> — click to expand</summary>
+
+> Open **Terminal** (`Cmd + Space` → "Terminal" on macOS, or your distro's terminal app).
+
+```bash
+git clone https://github.com/gytdrop/3d_print_ecommerce.git && \
+cd 3d_print_ecommerce/frontend && \
+npm install && \
+npm run dev
+```
+
+</details>
+
+<details>
+<summary><b>🪟 Windows (PowerShell)</b> — click to expand</summary>
+
+> Open **PowerShell** (`Win + X` → "Windows PowerShell" or "Terminal").
+
+```powershell
+git clone https://github.com/gytdrop/3d_print_ecommerce.git; `
+cd 3d_print_ecommerce/frontend; `
+npm install; `
+npm run dev
+```
+
+</details>
+
+<details>
+<summary><b>🪟 Windows (Command Prompt / CMD)</b> — click to expand</summary>
+
+> Open **Command Prompt** (`Win + R` → type `cmd` → Enter).
+
+```bat
+git clone https://github.com/gytdrop/3d_print_ecommerce.git & cd 3d_print_ecommerce\frontend & npm install & npm run dev
+```
+
+</details>
+
+When the dev server is ready, open **http://localhost:3000** in your browser. ✅
+
+> 🧠 **What's happening:** `git clone` downloads the repo, `cd` moves into the Next.js app folder, `npm install` installs all dependencies listed in `package.json`, and `npm run dev` starts the local server with hot-reload. If any command fails, jump to [🛠️ Troubleshooting](#-troubleshooting) below.
+
 ---
 
 ## 📋 Prerequisites
@@ -166,6 +215,53 @@ After `npm run dev` is running, you should see:
 4. No red errors in your terminal
 
 If all four check out — **you're good to go!** 🚀
+
+---
+
+## 🌐 Cross-platform one-liner (auto-detects your OS)
+
+If you don't want to pick a block from above, this single block works on **macOS, Linux, and Windows PowerShell**:
+
+### 🍎 macOS / 🐧 Linux / 🪟 PowerShell
+
+```bash
+git clone https://github.com/gytdrop/3d_print_ecommerce.git && cd 3d_print_ecommerce/frontend && (npm install) && npm run dev
+```
+
+### What this does, step by step
+
+| Step | Command | What happens |
+|------|---------|--------------|
+| 1 | `git clone <url>` | Downloads the repo into a new folder |
+| 2 | `cd 3d_print_ecommerce/frontend` | Moves into the Next.js app folder |
+| 3 | `npm install` | Reads `package.json` and installs every dependency |
+| 4 | `npm run dev` | Starts the dev server at `http://localhost:3000` |
+
+### OS-specific notes
+
+- **macOS / Linux**: paste straight into **Terminal**. The `&&` chains commands — if any step fails, the rest stop.
+- **Windows PowerShell**: paste straight in. PowerShell also supports `&&` (since Windows 10 1809+). If yours is older, use the [PowerShell block](#-one-shot-install-copy--paste) above.
+- **Windows CMD (`cmd.exe`)**: `&&` is NOT supported there — use the [Command Prompt block](#-one-shot-install-copy--paste) above, or open PowerShell instead.
+- **Git Bash on Windows**: behaves like Linux — the macOS/Linux block works.
+
+### 🛟 Even safer version (checks Node first)
+
+If you want to fail fast with a clear message when Node isn't installed:
+
+```bash
+# macOS / Linux
+command -v node >/dev/null 2>&1 || { echo "❌ Node.js not found. Install from https://nodejs.org"; exit 1; }
+git clone https://github.com/gytdrop/3d_print_ecommerce.git && \
+cd 3d_print_ecommerce/frontend && \
+npm install && \
+npm run dev
+```
+
+```powershell
+# Windows PowerShell
+if (-not (Get-Command node -ErrorAction SilentlyContinue)) { Write-Host "❌ Node.js not found. Install from https://nodejs.org" -ForegroundColor Red; exit 1 }
+git clone https://github.com/gytdrop/3d_print_ecommerce.git; cd 3d_print_ecommerce/frontend; npm install; npm run dev
+```
 
 ---
 
