@@ -6,7 +6,9 @@
     "sharp": true,
     "cpu-features": true,
     "dtrace-provider": true,
-    "@react-three/drei@9.122.0": true
+    "@react-three/drei@9.122.0": true,
+    "unrs-resolver": true,
+    "unrs-resolver@1.12.2": true
   },
   "scripts": {
     "dev": "next dev --webpack",

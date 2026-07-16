@@ -16,8 +16,9 @@ import { create } from 'zustand';
 
 // ─── Domain types ─────────────────────────────────────────────────────────────
 
+
 export type MaterialTypeId = 'pla' | 'abs' | 'petg' | 'resin' | 'nylon' | 'carbon';
-export type DeliveryTierId = 'express-8h' | 'standard-2d';
+export type DeliveryTierId = 'express-8h' | 'standard-2d' | 'budget-5-7d';
 
 export interface FileData {
   fileName:  string;
@@ -39,6 +40,7 @@ export const RUSH_RATE = 0.5;
 export const TIER_LEAD_TIMES: Record<DeliveryTierId, number> = {
   'express-8h':  8 / 24,  // ≈ 0.333 days
   'standard-2d': 2.0,
+  'budget-5-7d': 6.0,
 };
 
 /**
@@ -61,6 +63,7 @@ export interface PriceBreakdown {
   leadTimeDays:   number;
   rushMultiplier: number;   // 1.0 when no rush surcharge
   rushSurcharge:  number;   // rupees added above base
+  bulkDiscount?:  number;   // bulk discount (or eco tier discount) from backend
   finalPrice:     number;
   isExpedited:    boolean;
 }
@@ -120,6 +123,15 @@ interface OrderState {
   previewGenerated: boolean;
   uploadMode:       UploadMode;
 
+  priceBreakdown:   PriceBreakdown | null;
+  pincode:          string;
+  pincodeEligible:  boolean | null;
+  pincodeMessage:   string;
+  shippingAddress:  string;
+  contactEmail:     string;
+  contactPhone:     string;
+  orderSuccessId:   string | null;
+
   // Actions
   setFileData:         (data: FileData | null) => void;
   setMaterialType:     (type: MaterialTypeId) => void;
@@ -128,6 +140,17 @@ interface OrderState {
   setPreviewGenerated: (val: boolean) => void;
   setUploadMode:       (mode: UploadMode) => void;
   resetOrder:          () => void;
+
+  setPriceBreakdown:   (priceBreakdown: PriceBreakdown | null) => void;
+  setPincode:          (pincode: string) => void;
+  setPincodeEligible:  (eligible: boolean | null) => void;
+  setPincodeMessage:   (message: string) => void;
+  setShippingAddress:  (address: string) => void;
+  setContactEmail:     (email: string) => void;
+  setContactPhone:     (phone: string) => void;
+  setOrderSuccessId:   (id: string | null) => void;
+
+  fetchQuote:          () => Promise<void>;
 }
 
 const INITIAL_STATE = {
@@ -137,6 +160,14 @@ const INITIAL_STATE = {
   deliveryTier:     'standard-2d'  as DeliveryTierId,
   previewGenerated: false,
   uploadMode:       'gift'         as UploadMode,
+  priceBreakdown:   null,
+  pincode:          '',
+  pincodeEligible:  null,
+  pincodeMessage:   '',
+  shippingAddress:  '',
+  contactEmail:     '',
+  contactPhone:     '',
+  orderSuccessId:   null,
 } satisfies Partial<OrderState>;
 
 export function getBasePriceForVolume(
@@ -165,35 +196,100 @@ export function getBasePriceForVolume(
 
 // ─── Store ────────────────────────────────────────────────────────────────────
 
-export const useOrderStore = create<OrderState>()((set) => ({
+export const useOrderStore = create<OrderState>()((set, get) => ({
   ...INITIAL_STATE,
 
-  setFileData: (fileData) => set((state) => {
-    let basePrice = state.basePrice;
-    if (fileData && fileData.volumeCm3 !== null) {
-      basePrice = getBasePriceForVolume(fileData.volumeCm3, state.materialType);
-    } else if (fileData) {
-      // Fallback base price if no volume yet (e.g. 799 for image gifts, or material demo rate)
-      basePrice = state.uploadMode === 'gift' ? 799 : DEMO_BASE_PRICES[state.materialType];
-    } else {
-      basePrice = 0;
-    }
-    return { fileData, basePrice };
-  }),
+  setFileData: (fileData) => {
+    set((state) => {
+      let basePrice = state.basePrice;
+      if (fileData && fileData.volumeCm3 !== null) {
+        basePrice = getBasePriceForVolume(fileData.volumeCm3, state.materialType);
+      } else if (fileData) {
+        // Fallback base price if no volume yet (e.g. 799 for image gifts, or material demo rate)
+        basePrice = state.uploadMode === 'gift' ? 799 : DEMO_BASE_PRICES[state.materialType];
+      } else {
+        basePrice = 0;
+      }
+      return { fileData, basePrice };
+    });
+    get().fetchQuote();
+  },
 
-  setMaterialType: (materialType) => set((state) => {
-    let basePrice = state.basePrice;
-    if (state.fileData && state.fileData.volumeCm3 !== null) {
-      basePrice = getBasePriceForVolume(state.fileData.volumeCm3, materialType);
-    } else if (state.fileData) {
-      basePrice = DEMO_BASE_PRICES[materialType];
-    }
-    return { materialType, basePrice };
-  }),
+  setMaterialType: (materialType) => {
+    set((state) => {
+      let basePrice = state.basePrice;
+      if (state.fileData && state.fileData.volumeCm3 !== null) {
+        basePrice = getBasePriceForVolume(state.fileData.volumeCm3, materialType);
+      } else if (state.fileData) {
+        basePrice = DEMO_BASE_PRICES[materialType];
+      }
+      return { materialType, basePrice };
+    });
+    get().fetchQuote();
+  },
 
   setBasePrice:        (basePrice)        => set({ basePrice }),
-  setDeliveryTier:     (deliveryTier)     => set({ deliveryTier }),
+  setDeliveryTier:     (deliveryTier)     => {
+    set({ deliveryTier });
+    get().fetchQuote();
+  },
   setPreviewGenerated: (previewGenerated) => set({ previewGenerated }),
   setUploadMode:       (uploadMode)       => set({ uploadMode }),
   resetOrder:          ()                 => set(INITIAL_STATE),
+
+  setPriceBreakdown:   (priceBreakdown)   => set({ priceBreakdown }),
+  setPincode:          (pincode)          => set({ pincode }),
+  setPincodeEligible:  (pincodeEligible)  => set({ pincodeEligible }),
+  setPincodeMessage:   (pincodeMessage)   => set({ pincodeMessage }),
+  setShippingAddress:  (shippingAddress)  => set({ shippingAddress }),
+  setContactEmail:     (contactEmail)     => set({ contactEmail }),
+  setContactPhone:     (contactPhone)     => set({ contactPhone }),
+  setOrderSuccessId:   (orderSuccessId)   => set({ orderSuccessId }),
+
+  fetchQuote: async () => {
+    const { fileData, uploadMode, materialType, deliveryTier } = get();
+    // volume_cm3 logic:
+    // If fileData has a non-null volumeCm3, use it.
+    // Otherwise, if uploadMode === 'gift', use a default volume of 18.88 cm³.
+    // If it's project mode, use a default volume of 50.0 cm³.
+    const volume_cm3 = (fileData && fileData.volumeCm3 !== null)
+      ? fileData.volumeCm3
+      : (uploadMode === 'gift' ? 18.88 : 50.0);
+
+    try {
+      const response = await fetch('http://localhost:8080/api/quote', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          volume_cm3,
+          material_type: materialType,
+          delivery_tier: deliveryTier,
+        }),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to fetch quote:', response.statusText);
+        return;
+      }
+
+      const data = await response.json();
+      set({
+        basePrice: data.base_price,
+        priceBreakdown: {
+          basePrice: data.base_price,
+          leadTimeDays: TIER_LEAD_TIMES[deliveryTier],
+          rushMultiplier: data.rush_multiplier,
+          rushSurcharge: data.rush_surcharge,
+          bulkDiscount: data.bulk_discount,
+          finalPrice: data.final_price,
+          isExpedited: data.is_expedited,
+        },
+      });
+    } catch (error) {
+      console.error('Error fetching quote:', error);
+    }
+  },
 }));
+

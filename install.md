@@ -154,6 +154,16 @@ source ~/.bashrc
 
 Do not use `sudo` with npm. Instead, fix permissions as above, or use [nvm](https://github.com/nvm-sh/nvm).
 
+### `npm install` fails with peer dependency conflicts (`ERESOLVE`)
+
+If you hit `npm error ERESOLVE could not resolve` (commonly due to React 19 and older `@react-three` or `@react-spring` package peer requirements), run:
+
+```bash
+npm install --legacy-peer-deps
+```
+
+*Note: We have included an [.npmrc](file:///home/gytdrop/Documents/Desktop_Archive/BHAYYA/techazsure/3d%20print/frontend/.npmrc) file in the `frontend/` directory configured with `legacy-peer-deps=true` so that plain `npm install` works automatically.*
+
 ### Port 3000 is already in use
 
 ```bash

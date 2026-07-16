@@ -59,24 +59,52 @@ const TIERS: Tier[] = [
     surcharge:     'No extra charge',
     surchargeLabel: 'Included in base price',
   },
+  {
+    id: 'budget-5-7d',
+    icon: Clock,
+    iconBg:        'rgba(16,185,129,0.1)',
+    iconColor:     '#10b981',
+    accentBorder:  'rgba(16,185,129,0.3)',
+    accentBg:      'rgba(16,185,129,0.05)',
+    accentShadow:  'none',
+    label:         '5-7 Day Eco/Budget',
+    tagline:       'Eco-friendly shipping tier. Flat ₹100 discount.',
+    detail:        'Slower shipping for bulk or budget friendly orders.',
+    surcharge:     '- ₹100 discount',
+    surchargeLabel: 'Discount applied to quote',
+  },
 ];
 
 /* ─── Pincode banner ─────────────────────────────────────────────────────── */
 
 function PincodeBanner() {
-  const [value, setValue]     = useState('');
-  const [checked, setChecked] = useState(false);
-  const [eligible, setEligible] = useState<boolean | null>(null);
+  const [value, setValue] = useState('');
+  const pincode = useOrderStore((s) => s.pincode);
+  const eligible = useOrderStore((s) => s.pincodeEligible);
+  const message = useOrderStore((s) => s.pincodeMessage);
+  const setPincode = useOrderStore((s) => s.setPincode);
+  const setPincodeEligible = useOrderStore((s) => s.setPincodeEligible);
+  const setPincodeMessage = useOrderStore((s) => s.setPincodeMessage);
 
-  const handleCheck = (e: React.FormEvent) => {
+  const handleCheck = async (e: React.FormEvent) => {
     e.preventDefault();
     if (value.length !== 6) return;
-    // Placeholder check — replace with GET /api/zones/check?pincode=...
-    setEligible(parseInt(value[0]) <= 4);
-    setChecked(true);
+    try {
+      const response = await fetch(`http://localhost:8080/api/pincodes/check?pincode=${value}`);
+      if (!response.ok) {
+        console.error('Failed to check pincode');
+        return;
+      }
+      const data = await response.json();
+      setPincode(value);
+      setPincodeEligible(data.eligible);
+      setPincodeMessage(data.message);
+    } catch (error) {
+      console.error('Error checking pincode:', error);
+    }
   };
 
-  if (checked && eligible !== null) {
+  if (pincode !== '' && eligible !== null) {
     return (
       <div
         className={`flex items-center gap-3 px-4 py-3 rounded-xl border text-sm ${
@@ -87,15 +115,18 @@ function PincodeBanner() {
       >
         <MapPin size={14} className={eligible ? 'text-[var(--bg-accent)]' : 'text-[var(--text-muted)]'} />
         <span className="flex-1 text-[var(--text-on-card)]">
-          Pincode <strong className="text-[var(--text-on-page)]">{value}</strong> —{' '}
-          {eligible ? (
-            <span className="text-[var(--bg-accent)] font-semibold">⚡ 8-Hour Express available in your area</span>
-          ) : (
-            <span className="text-[var(--text-on-card)]">Standard delivery only in your area</span>
-          )}
+          Pincode <strong className="text-[var(--text-on-page)]">{pincode}</strong> —{' '}
+          <span className={eligible ? 'text-[var(--bg-accent)] font-semibold' : 'text-[var(--text-on-card)]'}>
+            {message}
+          </span>
         </span>
         <button
-          onClick={() => { setChecked(false); setValue(''); setEligible(null); }}
+          onClick={() => {
+            setValue('');
+            setPincode('');
+            setPincodeEligible(null);
+            setPincodeMessage('');
+          }}
           className="text-xs text-[var(--text-muted)] hover:text-[var(--text-on-page)] transition-colors shrink-0"
         >
           Change
