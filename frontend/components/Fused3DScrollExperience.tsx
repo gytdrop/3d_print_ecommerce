@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Upload } from 'lucide-react';
 import EngineeringHudRails from '@/components/hud/EngineeringHudRails';
+import MobileHomeFrame from '@/components/home/MobileHomeFrame';
 import {
   SpecStageScene,
   PricingScene,
@@ -58,12 +59,33 @@ const PRICING_TIERS: PricingTier[] = [
   { id: 'large', name: 'Large Frame', price: 1299, size: '20x15 cm' },
 ];
 
+/** Scrub position at the reading plateau of each of the six stages. */
+const STAGE_TARGETS = [0.00, 0.22, 0.38, 0.54, 0.72, 0.95];
+
+/** Phone-portrait breakpoint: everything below Tailwind's `md`. */
+const PHONE_MQ = '(max-width: 767px)';
+
+/** Hydration-safe phone detection: `null` until mounted (both frames render,
+    CSS picks one), then only the matching frame is rendered at all. */
+function useIsPhone(): boolean | null {
+  const [isPhone, setIsPhone] = useState<boolean | null>(null);
+  useEffect(() => {
+    const mq = window.matchMedia(PHONE_MQ);
+    const update = () => setIsPhone(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+  return isPhone;
+}
+
 export default function Fused3DScrollExperience() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const targetProgressRef = useRef(0);
   const currentProgressRef = useRef(0);
   const lastUiProgressRef = useRef(0);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const isPhone = useIsPhone();
 
   // Derive activeStepIndex directly from scrollProgress for 100% sync
   const activeStepIndex =
@@ -118,8 +140,13 @@ export default function Fused3DScrollExperience() {
 
     // Touch event handlers for mobile gestures
     let touchStartY = 0;
+    let touchOriginY = 0;
+    let touchOriginProgress = 0;
+    const isPhoneNow = () => window.matchMedia(PHONE_MQ).matches;
     const onTouchStart = (e: TouchEvent) => {
       touchStartY = e.touches[0].clientY;
+      touchOriginY = touchStartY;
+      touchOriginProgress = targetProgressRef.current;
     };
 
     const onTouchMove = (e: TouchEvent) => {
@@ -127,7 +154,26 @@ export default function Fused3DScrollExperience() {
       const currentY = e.touches[0].clientY;
       const delta = touchStartY - currentY;
       touchStartY = currentY;
-      targetProgressRef.current = Math.max(0, Math.min(1, targetProgressRef.current + delta * 0.0016));
+      // Phone portrait: one comfortable swipe ≈ one stage, so a single flick
+      // no longer blurs through several stages.
+      const factor = isPhoneNow() ? 0.0007 : 0.0016;
+      targetProgressRef.current = Math.max(0, Math.min(1, targetProgressRef.current + delta * factor));
+    };
+
+    // Phone portrait only: on release, settle on a stage plateau so the user
+    // always lands on a fully readable stage (never between two crossfades).
+    const nearestStage = (p: number) =>
+      STAGE_TARGETS.reduce((best, t, i) => (Math.abs(t - p) < Math.abs(STAGE_TARGETS[best] - p) ? i : best), 0);
+    const onTouchEnd = (e: TouchEvent) => {
+      if (!isPhoneNow()) return;
+      const endY = e.changedTouches[0]?.clientY ?? touchStartY;
+      const dy = touchOriginY - endY; // > 0 ⇒ swiped up ⇒ forward
+      if (Math.abs(dy) < 10) return; // a tap: leave the timeline alone
+      const origin = nearestStage(touchOriginProgress);
+      let next = nearestStage(targetProgressRef.current);
+      if (next === origin && Math.abs(dy) > 40) next = origin + Math.sign(dy);
+      next = Math.max(0, Math.min(STAGE_TARGETS.length - 1, next));
+      targetProgressRef.current = STAGE_TARGETS[next];
     };
 
     // Keyboard navigation (Arrow keys, Space, PageUp/PageDown)
@@ -144,6 +190,7 @@ export default function Fused3DScrollExperience() {
     window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: false });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
     window.addEventListener('keydown', onKeyDown);
 
     // Deep-link to specific stage via ?step=0..5
@@ -153,10 +200,9 @@ export default function Fused3DScrollExperience() {
       if (stepParam !== null) {
         const stepNum = parseInt(stepParam, 10);
         if (!isNaN(stepNum) && stepNum >= 0 && stepNum <= 5) {
-          const progressTargets = [0.00, 0.22, 0.38, 0.54, 0.72, 0.95];
-          targetProgressRef.current = progressTargets[stepNum];
-          currentProgressRef.current = progressTargets[stepNum];
-          setScrollProgress(progressTargets[stepNum]);
+          targetProgressRef.current = STAGE_TARGETS[stepNum];
+          currentProgressRef.current = STAGE_TARGETS[stepNum];
+          setScrollProgress(STAGE_TARGETS[stepNum]);
         }
       }
     }
@@ -196,6 +242,7 @@ export default function Fused3DScrollExperience() {
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
       window.removeEventListener('keydown', onKeyDown);
       cancelAnimationFrame(animId);
       if (video) {
@@ -252,15 +299,17 @@ export default function Fused3DScrollExperience() {
   };
 
   const scrollToStep = (idx: number) => {
-    const progressTargets = [0.00, 0.22, 0.38, 0.54, 0.72, 0.95];
-    targetProgressRef.current = progressTargets[idx];
+    targetProgressRef.current = STAGE_TARGETS[idx];
+  };
+  const scrubTo = (ratio: number) => {
+    targetProgressRef.current = ratio;
   };
 
   const pricingOpacity = getPricingOpacity();
   const footerOpacity = getFooterOpacity();
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#050608] text-[#f8fafc] font-sans antialiased selection:bg-slate-700 selection:text-white select-none">
+    <div className="fixed inset-0 w-screen h-screen max-md:h-[100dvh] overflow-hidden bg-[#050608] text-[#f8fafc] font-sans antialiased selection:bg-slate-700 selection:text-white select-none">
 
       {/* ─── Pinned 3D Mechanical Video Background (Zero Lag All-Intra) ─── */}
       <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden bg-[#050608]">
@@ -292,8 +341,24 @@ export default function Fused3DScrollExperience() {
         />
       </div>
 
-      {/* ─── Fixed Viewport Frame: Never scrolls off screen ─── */}
-      <div className="absolute inset-0 w-full h-full z-20 flex flex-col justify-between pointer-events-none p-4 sm:p-8 md:p-10">
+      {/* ─── Phone portrait frame (< md): own chrome + re-choreographed scenes ─── */}
+      {isPhone !== false && (
+        <MobileHomeFrame
+          scrollProgress={scrollProgress}
+          activeStepIndex={activeStepIndex}
+          stages={STAGES}
+          tiers={PRICING_TIERS}
+          getStageOpacity={getStageOpacity}
+          pricingOpacity={pricingOpacity}
+          footerOpacity={footerOpacity}
+          onJumpToStep={scrollToStep}
+          onScrub={scrubTo}
+        />
+      )}
+
+      {/* ─── Fixed Viewport Frame (md+): Never scrolls off screen ─── */}
+      {isPhone !== true && (
+      <div className="absolute inset-0 w-full h-full z-20 hidden md:flex flex-col justify-between pointer-events-none p-4 sm:p-8 md:p-10">
 
         {/* Top Clean Header (antigravity.google style) */}
         <header className="w-full max-w-6xl mx-auto flex items-center justify-between pointer-events-auto border-b border-white/10 pb-4">
@@ -435,6 +500,7 @@ export default function Fused3DScrollExperience() {
         </footer>
 
       </div>
+      )}
 
     </div>
   );

@@ -40,7 +40,7 @@ export interface PricingTier {
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 
 /** Per-element entrance: opacity^k staggers appearance, (dx,dy) sets drift direction. */
-const drift = (o: number, k: number, dx: number, dy: number) => {
+export const drift = (o: number, k: number, dx: number, dy: number) => {
   const c = clamp01(o);
   return {
     opacity: Math.pow(c, k),
@@ -50,8 +50,8 @@ const drift = (o: number, k: number, dx: number, dy: number) => {
 
 /* Layered shadows: a tight dark edge for contrast + a wide soft halo to kill
    bright video hotspots behind the glyphs. */
-const TS = '[text-shadow:0_1px_3px_rgba(0,0,0,0.95),0_3px_20px_rgba(0,0,0,0.9),0_0_40px_rgba(0,0,0,0.6)]';
-const TS_SM = '[text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_12px_rgba(0,0,0,0.9)]';
+export const TS = '[text-shadow:0_1px_3px_rgba(0,0,0,0.95),0_3px_20px_rgba(0,0,0,0.9),0_0_40px_rgba(0,0,0,0.6)]';
+export const TS_SM = '[text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_12px_rgba(0,0,0,0.9)]';
 
 const CHIP =
   'text-[11px] font-mono text-slate-100 bg-black/45 px-3 py-1.5 rounded-md border border-white/20 backdrop-blur-md shadow-sm';
@@ -74,7 +74,7 @@ export function HudFrame() {
 /* ─── Stages 01–04: spec scenes ──────────────────────────────────────────── */
 
 /** Per-stage 2.5D floating art: main piece matches the stage's subject. */
-const STAGE_FLOATS: Record<string, { main: ComponentType<ArtProps>; alt: ComponentType<ArtProps> }> = {
+export const STAGE_FLOATS: Record<string, { main: ComponentType<ArtProps>; alt: ComponentType<ArtProps> }> = {
   '01': { main: LampArt, alt: LayersArt },
   '02': { main: LayersArt, alt: LampArt },
   '03': { main: BaseArt, alt: LampArt },
@@ -195,37 +195,6 @@ export const SpecStageScene = memo(function SpecStageScene({ stage, o }: { stage
           </Link>
         </div>
       </div>
-
-      {/* ── Mobile: compact stacked fallback ── */}
-      <div className="md:hidden absolute inset-x-0 top-1/2 -translate-y-1/2" style={{ opacity: o }}>
-        <div className="bg-black/35 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <div className="flex items-center justify-between text-[10px] font-mono text-slate-300 mb-2">
-            <span>{stage.tag}</span>
-            <span>{stage.step} / 06</span>
-          </div>
-          <h1 className="text-lg font-semibold text-white leading-snug">{stage.title}</h1>
-          <p className="mt-2 text-xs text-slate-300 leading-relaxed">{stage.desc}</p>
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {stage.highlights.map((h) => (
-              <span key={h} className="text-[10px] font-mono text-slate-300 bg-white/10 px-2 py-0.5 rounded">
-                {h}
-              </span>
-            ))}
-          </div>
-          <div className="mt-4 flex items-center justify-between">
-            <Link href="/explore" className="text-xs text-slate-300">
-              Explore →
-            </Link>
-            <Link
-              href="/upload"
-              className="text-xs font-semibold px-3 py-1.5 bg-white text-black rounded-md flex items-center gap-1.5"
-            >
-              <Upload size={12} />
-              Upload STL
-            </Link>
-          </div>
-        </div>
-      </div>
     </>
   );
 });
@@ -330,35 +299,6 @@ export const PricingScene = memo(function PricingScene({ o, tiers }: { o: number
         >
           Check pin code eligibility →
         </Link>
-      </div>
-
-      {/* ── Mobile: compact rows ── */}
-      <div className="md:hidden absolute inset-x-0 top-1/2 -translate-y-1/2" style={{ opacity: o }}>
-        <div className="bg-black/35 backdrop-blur-md border border-white/10 rounded-xl p-4">
-          <h2 className="text-base font-semibold text-white">Select Frame Dimensions</h2>
-          <div className="mt-3 space-y-2">
-            {tiers.map((tier) => (
-              <Link
-                key={tier.id}
-                href="/upload"
-                className={`flex items-center justify-between py-2 px-3 rounded-lg border text-xs ${
-                  tier.popular ? 'border-white/30 bg-white/15' : 'border-white/10 bg-black/40'
-                }`}
-              >
-                <span className="font-medium text-white">{tier.name}</span>
-                <span className="text-slate-300">{tier.size}</span>
-                <span className="font-semibold text-white">₹{tier.price}</span>
-                <ArrowRight size={12} className="text-slate-400" />
-              </Link>
-            ))}
-          </div>
-          <div className="mt-3 flex items-center justify-between text-[10px] text-slate-400">
-            <span>8-Hour Express · Bangalore</span>
-            <Link href="/zones" className="text-slate-200">
-              Check pin code →
-            </Link>
-          </div>
-        </div>
       </div>
     </>
   );
@@ -473,26 +413,6 @@ export const FooterScene = memo(function FooterScene({ o }: { o: number }) {
           Start Instant Custom Order
           <ArrowRight size={13} />
         </Link>
-      </div>
-
-      {/* ── Mobile: compact stack ── */}
-      <div className="md:hidden absolute inset-x-0 top-1/2 -translate-y-1/2" style={{ opacity: o }}>
-        <div className="bg-black/35 backdrop-blur-md border border-white/10 rounded-xl p-4 space-y-3">
-          <div className="text-base font-semibold text-white">TechAZsure 3D Print</div>
-          <p className="text-xs text-slate-300 leading-relaxed">{siteContent.footer.description}</p>
-          <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-300">
-            <Link href="/explore">All Products</Link>
-            <Link href="/upload">Custom Upload</Link>
-            <Link href="/zones">Delivery Zones</Link>
-            <Link href="/about">About</Link>
-          </div>
-          <div className="flex items-center justify-between pt-2 border-t border-white/10 text-[10px] text-slate-400">
-            <span>© {year} TechAZsure</span>
-            <Link href="/upload" className="text-slate-200 font-medium">
-              Start Custom Order →
-            </Link>
-          </div>
-        </div>
       </div>
     </>
   );
