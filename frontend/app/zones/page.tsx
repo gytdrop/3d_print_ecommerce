@@ -1,57 +1,90 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, Zap, GraduationCap, Package, AlertCircle } from 'lucide-react';
+import { Search, Zap, GraduationCap, Package, AlertCircle, Loader2, CalendarClock } from 'lucide-react';
 
 interface LookupResult {
   tier: 'express' | 'campus' | 'standard' | 'invalid';
   message: string;
 }
 
-// Local helper utility to validate input and return matching delivery tier
-function validatePinCode(pin: string): LookupResult {
-  const sanitized = pin.replace(/\s+/g, '');
-  
-  if (!/^\d{6}$/.test(sanitized)) {
-    return {
-      tier: 'invalid',
-      message: 'Please enter a valid 6-digit numeric PIN code.',
-    };
-  }
+interface ShipEstimate {
+  days_min: number;
+  days_max: number;
+  eta_from: string;
+  eta_to: string;
+  message: string;
+}
 
-  const pinNum = parseInt(sanitized, 10);
-
-  // Express Tier: 560001 to 560110 (Bangalore Core Hub)
+// Offline fallback mirroring the seeded tiers — used only when the backend
+// is unreachable. The live source of truth is /api/pincodes/check.
+function fallbackLookup(pin: string): LookupResult {
+  const pinNum = parseInt(pin, 10);
   if (pinNum >= 560001 && pinNum <= 560110) {
     return {
       tier: 'express',
       message: '8-Hour Express Available! Place your order before 2 PM to receive your print tonight.',
     };
   }
-
-  // Campus Priority Tier: 123021 to 123035 (Mahendragarh / Central University of Haryana Campus region)
   if (pinNum >= 123021 && pinNum <= 123035) {
     return {
       tier: 'campus',
       message: 'Campus Priority Active! Hand-delivered straight to hostels/departments by evening.',
     };
   }
-
-  // Default Standard Tier for any other 6-digit sequences
   return {
     tier: 'standard',
-    message: 'Standard Delivery Available. Dispatched via priority partner courier in 3-5 business days.',
+    message: 'Standard Delivery Available via priority partner courier.',
   };
 }
 
 export default function ZonesPage() {
   const [pinInput, setPinInput] = useState('');
   const [lookupResult, setLookupResult] = useState<LookupResult | null>(null);
+  const [estimate, setEstimate] = useState<ShipEstimate | null>(null);
+  const [checking, setChecking] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = validatePinCode(pinInput);
-    setLookupResult(result);
+    const sanitized = pinInput.replace(/\s+/g, '');
+
+    if (!/^\d{6}$/.test(sanitized)) {
+      setLookupResult({
+        tier: 'invalid',
+        message: 'Please enter a valid 6-digit numeric PIN code.',
+      });
+      setEstimate(null);
+      return;
+    }
+
+    setChecking(true);
+    setEstimate(null);
+
+    // Live tier from the pincodes database (admin-managed).
+    try {
+      const res = await fetch(`/api/pincodes/check?pincode=${sanitized}`);
+      if (!res.ok) throw new Error('check failed');
+      const data = await res.json();
+      const tier: LookupResult['tier'] =
+        data.tier === 'express' || data.tier === 'campus' ? data.tier : 'standard';
+      setLookupResult({
+        tier,
+        message: data.message || 'Standard Delivery Available via priority partner courier.',
+      });
+    } catch {
+      setLookupResult(fallbackLookup(sanitized));
+    }
+
+    // Delivery window estimated against the manufacturing origin pincode,
+    // honoring any admin-set per-pincode override.
+    try {
+      const res = await fetch(`/api/shipping/estimate?pincode=${sanitized}`);
+      setEstimate(res.ok ? await res.json() : null);
+    } catch {
+      setEstimate(null);
+    }
+
+    setChecking(false);
   };
 
   return (
@@ -80,7 +113,10 @@ export default function ZonesPage() {
             value={pinInput}
             onChange={(e) => {
               setPinInput(e.target.value);
-              if (lookupResult) setLookupResult(null);
+              if (lookupResult) {
+                setLookupResult(null);
+                setEstimate(null);
+              }
             }}
             placeholder="Enter 6-digit PIN code"
             className="w-full bg-transparent border-0 outline-none text-base text-[var(--text-on-page)] placeholder:text-[var(--text-muted)] py-1 font-mono"
@@ -88,16 +124,18 @@ export default function ZonesPage() {
           />
           <button
             type="submit"
-            className="h-12 px-6 rounded-xl text-base font-semibold btn-accent hover:opacity-90 active:scale-[0.98] transition-transform shrink-0"
+            disabled={checking}
+            className="h-12 px-6 rounded-xl text-base font-semibold btn-accent hover:opacity-90 active:scale-[0.98] transition-transform shrink-0 disabled:opacity-50 flex items-center gap-2"
           >
-            Check
+            {checking ? <Loader2 size={16} className="animate-spin" /> : null}
+            {checking ? 'Checking…' : 'Check'}
           </button>
         </div>
       </form>
 
       {/* Dynamic Context-Driven Status Badges */}
       {lookupResult && (
-        <div className="w-full mt-4 animate-fade-in-up">
+        <div className="w-full mt-4 animate-fade-in-up flex flex-col gap-3">
           {lookupResult.tier === 'express' && (
             <div className="p-4 rounded-xl text-left border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 flex gap-3 items-start">
               <Zap size={18} className="shrink-0 mt-0.5" />
@@ -123,6 +161,21 @@ export default function ZonesPage() {
             <div className="p-4 rounded-xl text-left border bg-red-500/10 text-red-400 border-red-500/20 flex gap-3 items-start">
               <AlertCircle size={18} className="shrink-0 mt-0.5" />
               <p className="text-sm font-medium">{lookupResult.message}</p>
+            </div>
+          )}
+
+          {/* Estimated delivery window vs manufacturing origin */}
+          {estimate && lookupResult.tier !== 'invalid' && (
+            <div className="p-4 rounded-xl text-left border bg-[var(--bg-card)] border-[var(--border-subtle)] flex gap-3 items-start">
+              <CalendarClock size={18} className="shrink-0 mt-0.5 text-[var(--bg-accent)]" />
+              <div>
+                <p className="text-sm font-medium text-[var(--text-on-page)]">{estimate.message}</p>
+                <p className="text-xs text-[var(--text-muted)] mt-0.5 font-mono">
+                  {estimate.eta_from === estimate.eta_to
+                    ? `Expected: ${estimate.eta_from}`
+                    : `Expected: ${estimate.eta_from} → ${estimate.eta_to}`}
+                </p>
+              </div>
             </div>
           )}
         </div>

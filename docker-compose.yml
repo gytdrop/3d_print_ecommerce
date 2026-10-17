@@ -42,6 +42,28 @@ services:
       timeout: 5s
       retries: 3
 
+  # 2b. Isolated Admin Dashboard (SECURITY: deliberately kept OFF the public
+  # proxy — bound to 127.0.0.1 on the VPS host only. Reach it via SSH tunnel:
+  #   ssh -L 9090:127.0.0.1:9090 user@vps   →   http://localhost:9090
+  admin:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: techazsure-admin
+    restart: unless-stopped
+    command: ["/app/admin"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-techazsure}:${POSTGRES_PASSWORD:-techazsure_secret_2026}@db:5432/${POSTGRES_DB:-techazsure_3dprint}?sslmode=disable
+      ADMIN_PORT: 9090
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env.docker}
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend-net
+
   # 3. Next.js 16 Standalone Frontend
   frontend:
     build:

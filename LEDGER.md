@@ -101,8 +101,13 @@ Combines the interactive showcase feel of [`antigravity.google`](https://antigra
 
 ### Phase 3: Photo Lamp Frame Product (Spec Complete — see `photo-lamp-spec.md`)
 - [x] **PRD finalized (2026-10-17)**: Dedicated `/lamp` flow — photo import with aspect-locked crop UI, live Three.js backlit 3D preview (lamp on/off), server-side lithophane STL generation in Go, fixed 3-size matrix pricing (S 10×8cm ₹499, M 15×10cm ₹799, L 20×15cm ₹1299), slide-in rail cuboidal box with warm-white USB-C LED, orders via `product_type = 'photo_lamp'`.
-- [ ] **Implementation (P0)**: `/lamp` page, photo validation & crop, 3D preview, Go lithophane STL generator, orders schema extension, homepage Stage 05 CTA + `/explore` card entry points.
-- [ ] **Blocking inputs before build**: measured USB-C LED module dimensions (box depth/rails); panel thickness min/max vs glow quality.
+- [x] **Implementation (P0) complete (2026-10-17)**: `/lamp` configurator with crop UI + live 3D preview, `POST /api/uploads/photo`, Go lithophane STL generator (`internal/lithophane`) running async per order, `orders` schema extension, homepage Stage 05 CTA + `/explore` card entry points. End-to-end verified against live PostgreSQL.
+- [ ] **Blocking inputs before first production print**: measured USB-C LED module dimensions (box depth/rails); panel thickness min/max vs glow quality.
+
+### Phase 4: Admin Ops Dashboard & Configurable Platform (Complete — 2026-10-17)
+- [x] **DB-backed settings**: previously hardcoded values (lamp prices, eco discount, rush rate, machine rate, bulk discount rules, manufacturing origin) now live in a `settings` JSONB table, edited from the dashboard, cached 15s in the public API, seeded with defaults that never overwrite admin edits.
+- [x] **Shipping estimator**: `GET /api/shipping/estimate?pincode=…` compares the customer pincode against the admin-configured manufacturing origin using India's hierarchical pincode structure (same pincode → district (3 digits) → region (2) → zone (1) → national), each level mapping to an admin-tunable day band; per-pincode overrides can pin an exact day window or a fixed delivery date. Shown live in the `/lamp` delivery step.
+- [x] **Isolated admin service** (`cmd/admin`, container `techazsure-admin`): separate binary and container deliberately kept OFF the public Nginx proxy — binds `127.0.0.1:9090` on the VPS host only (SSH tunnel to access), requires `ADMIN_TOKEN` bearer auth (constant-time compare), strict CSP/no-store headers. Dashboard manages: origin & pricing, shipping bands, pincode tiers + overrides, an estimator test tool, and order dispatch stage transitions (`sliced` → … → `delivered`) feeding the public `/track` timeline — closing the Phase 2 "Admin Dispatch Dashboard" roadmap item.
 
 ---
 

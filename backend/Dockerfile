@@ -15,8 +15,9 @@ RUN go mod download
 # Copy backend source code
 COPY . .
 
-# Build static binary with CGO disabled
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/server ./cmd/server
+# Build static binaries with CGO disabled (public API + isolated admin dashboard)
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/server ./cmd/server && \
+    CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /app/admin ./cmd/admin
 
 # Final production stage
 FROM alpine:3.20
@@ -30,7 +31,10 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
 
 COPY --from=builder /app/server /app/server
+COPY --from=builder /app/admin /app/admin
 
 EXPOSE 8080
 
+# Default entrypoint is the public API; the admin service overrides the
+# command with /app/admin in docker-compose.yml.
 CMD ["/app/server"]

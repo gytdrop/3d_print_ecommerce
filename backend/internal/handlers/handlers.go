@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"techazsure-3dprint/backend/internal/config"
 	"techazsure-3dprint/backend/internal/db"
 	"techazsure-3dprint/backend/internal/service"
 )
@@ -130,7 +131,7 @@ func HandleQuote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := service.CalculateQuote(req.VolumeCm3, req.MaterialType, req.DeliveryTier)
+	res, err := service.CalculateQuoteCfg(config.Get(r.Context()), req.VolumeCm3, req.MaterialType, req.DeliveryTier)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -261,6 +262,13 @@ type OrderRequest struct {
 	ShippingAddress string  `json:"shipping_address"`
 	ContactEmail    string  `json:"contact_email"`
 	ContactPhone    string  `json:"contact_phone"`
+
+	// Photo Lamp Frame fields (product_type = 'photo_lamp').
+	ProductType     string `json:"product_type"`
+	LampSize        string `json:"lamp_size"`
+	LampOrientation string `json:"lamp_orientation"`
+	LampBoxColor    string `json:"lamp_box_color"`
+	PhotoURL        string `json:"photo_url"`
 }
 
 // OrderResponse represents the body returned by POST /api/orders.
@@ -283,6 +291,30 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid JSON payload"})
 		return
+	}
+
+	isPhotoLamp := req.ProductType == "photo_lamp"
+
+	// Photo Lamp orders derive file metadata and pricing from the lamp
+	// configuration rather than an uploaded STL.
+	var lampPhotoPath string
+	if isPhotoLamp {
+		photoPath, errMsg := validateLampOrder(&req)
+		if errMsg != "" {
+			writeJSONError(w, http.StatusBadRequest, errMsg)
+			return
+		}
+		lampPhotoPath = photoPath
+		cfg := service.LampSizes[req.LampSize]
+		req.MaterialType = "pla" // panel is always translucent white PLA
+		req.FileURL = req.PhotoURL
+		req.VolumeCm3 = cfg.NominalVolumeCm3
+		if req.FileName == "" {
+			req.FileName = "photo-lamp-" + req.LampSize + ".jpg"
+		}
+		if req.FileSize <= 0 {
+			req.FileSize = 1
+		}
 	}
 
 	// Validate inputs
@@ -310,8 +342,15 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Calculate prices
-	prices, err := service.CalculateQuote(req.VolumeCm3, req.MaterialType, req.DeliveryTier)
+	// Calculate prices: flat matrix for photo lamps, volumetric engine for STL.
+	cfg := config.Get(r.Context())
+	var prices service.QuoteResponse
+	var err error
+	if isPhotoLamp {
+		prices, err = service.CalculateLampQuoteCfg(cfg, req.LampSize, req.DeliveryTier)
+	} else {
+		prices, err = service.CalculateQuoteCfg(cfg, req.VolumeCm3, req.MaterialType, req.DeliveryTier)
+	}
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -331,17 +370,28 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Save order to the database
+	productType := req.ProductType
+	if productType == "" {
+		productType = "stl"
+	}
+	stlGenStatus := ""
+	if isPhotoLamp {
+		stlGenStatus = "pending"
+	}
 	var orderID string
 	err = db.DB.QueryRowContext(r.Context(),
 		`INSERT INTO orders (
 			file_name, file_size, volume_cm3, file_url, material_type, delivery_tier,
 			pincode, base_price, rush_surcharge, bulk_discount, final_price,
-			shipping_address, contact_email, contact_phone, status
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'order_placed')
+			shipping_address, contact_email, contact_phone, status,
+			product_type, lamp_size, lamp_orientation, lamp_box_color, photo_url, stl_generation_status
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'order_placed',
+			$15, NULLIF($16, ''), NULLIF($17, ''), NULLIF($18, ''), NULLIF($19, ''), NULLIF($20, ''))
 		RETURNING id`,
 		req.FileName, req.FileSize, req.VolumeCm3, req.FileURL, req.MaterialType, req.DeliveryTier,
 		req.Pincode, prices.BasePrice, prices.RushSurcharge, prices.BulkDiscount, prices.FinalPrice,
 		req.ShippingAddress, req.ContactEmail, req.ContactPhone,
+		productType, req.LampSize, req.LampOrientation, req.LampBoxColor, req.PhotoURL, stlGenStatus,
 	).Scan(&orderID)
 
 	if err != nil {
@@ -356,6 +406,12 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 		 VALUES ($1, 'order_placed', 'Order registered and queued for farm slicing.', 'Bangalore Hub')`,
 		orderID,
 	)
+
+	// Generate the printable lithophane STL in the background; order placement
+	// never blocks on it (photo-lamp-spec.md P0-5).
+	if isPhotoLamp {
+		go generateLampSTL(orderID, lampPhotoPath, req.LampSize, req.LampOrientation)
+	}
 
 	response := OrderResponse{
 		OrderID:    orderID,

@@ -67,6 +67,7 @@ ON CONFLICT (id) DO UPDATE SET
 
 -- 5. Catalog Products
 INSERT INTO products (id, category_id, name, slug, description, base_price, image_url, material_default, tag, tag_variant, is_active) VALUES
+('photo-lamp-frame', 'frames', 'Photo Lamp Frame', 'photo-lamp-frame', 'Your photo 3D-printed as a glowing lithophane panel, seated in a cuboidal LED lamp box with slide-in rails and a warm-white USB-C light engine.', 499.00, '/frames/classic_frame.png', 'pla', 'New', 'badge-cyan', true),
 ('classic-lithophane', 'frames', 'Classic Lithophane Frame', 'classic-lithophane-frame', 'Signature rectangular frame with precision 3D-etched backlight layout.', 299.00, '/frames/classic_frame.png', 'pla', 'Bestseller', 'badge-accent', true),
 ('heart-shaped-memory', 'frames', 'Heart-Shaped Memory Frame', 'heart-shaped-memory-frame', 'Romantic heart-profile frame designed for couples and anniversaries.', 349.00, '/frames/heart_frame.png', 'pla', 'Romantic', 'badge-cyan', true),
 ('ornate-vintage-border', 'frames', 'Ornate Vintage Border Frame', 'ornate-vintage-border-frame', 'Elegant frame styled with classic historical relief patterns and textured borders.', 399.00, '/frames/vintage_frame.png', 'pla', 'Elegant', 'badge-accent', true),
@@ -117,3 +118,26 @@ INSERT INTO order_timeline (order_id, stage, message, location) VALUES
 ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'sliced', 'G-code generated at 0.12mm layer resolution with adaptive infill.', 'Bangalore Slicing Cluster'),
 ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'in_print', 'Print bed heated to 60°C. Extruding layer 142 of 640 on Farm Station 04.', 'Print Bed 04')
 ON CONFLICT DO NOTHING;
+
+-- 8. Default platform settings (admin-editable; DO NOTHING so admin edits
+-- made in the dashboard are never overwritten on container reboot).
+INSERT INTO settings (key, value) VALUES
+('platform_config', '{
+  "origin_pincode": "560001",
+  "origin_address": "TechAZsure Print Farm, Bangalore 560001",
+  "lamp_prices": {"small": 499, "medium": 799, "large": 1299},
+  "eco_discount": 100,
+  "rush_surcharge_rate": 0.833,
+  "machine_rate_per_cm3": 20,
+  "bulk_volume_threshold": 100,
+  "bulk_price_threshold": 2000,
+  "bulk_discount_pct": 0.10,
+  "shipping": {
+    "same_pincode":  {"min_days": 0, "max_days": 1},
+    "same_district": {"min_days": 1, "max_days": 2},
+    "same_region":   {"min_days": 2, "max_days": 3},
+    "same_zone":     {"min_days": 3, "max_days": 5},
+    "national":      {"min_days": 5, "max_days": 7}
+  }
+}'::jsonb)
+ON CONFLICT (key) DO NOTHING;

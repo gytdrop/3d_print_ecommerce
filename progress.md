@@ -78,4 +78,21 @@ Last updated: 2026-10-17
 
 ### Phase 3: Photo Lamp Frame Product
 - [x] **M13: Photo Lamp Frame PRD** (2026-10-17): Full product spec written and approved — see [photo-lamp-spec.md](photo-lamp-spec.md). Covers the `/lamp` flow (photo import → crop → live backlit 3D preview → order), server-side lithophane STL generation, fixed 3-size matrix pricing, and reuse of the existing orders/tracking spine.
-- [ ] **M14: `/lamp` Implementation (P0 scope)**: Frontend configurator + preview, Go STL generation, orders schema extension (`product_type = 'photo_lamp'`), homepage Stage 05 CTA and `/explore` entry points. Blocked on LED module measurements and panel thickness validation (see spec Open Questions).
+- [x] **M14: `/lamp` Implementation (P0 scope)** (2026-10-17):
+  - Frontend: `/lamp` configurator (photo import with type/size/resolution validation, aspect-locked crop with drag + zoom, size/orientation/box-color selection, live Three.js lamp preview with on/off backlight toggle, pincode-gated delivery tiers, order placement + tracking link).
+  - Backend: `POST /api/uploads/photo` (15MB JPEG/PNG multipart), `service.CalculateLampQuote` flat matrix pricing, `internal/lithophane` image→watertight binary STL generator (0.8–2.8mm relief, 512-sample grid), async generation after order placement with success/failure recorded on the order + timeline.
+  - Schema: idempotent `orders` columns (`product_type`, `lamp_size`, `lamp_orientation`, `lamp_box_color`, `photo_url`, `generated_stl_url`, `stl_generation_status`); `photo-lamp-frame` catalog seed.
+  - Entry points: homepage Stage 05 size CTAs → `/lamp?size=…`; featured `/explore` card → `/lamp`.
+  - Verified: Go unit tests pass, `npm run build` clean, end-to-end order flow tested against a live PostgreSQL instance (photo upload → ₹699 eco order → 35MB STL generated + timeline event; express/eco pricing and legacy STL orders confirmed intact).
+  - Still open before first production print: LED module measurements (box depth/rails) and panel thickness glow validation (spec Open Questions 1–2).
+
+### Phase 4: Admin Ops Dashboard & Configurable Platform
+- [x] **M15: Isolated Admin Dashboard + DB-backed settings + shipping estimator** (2026-10-17):
+  - Moved hardcoded pricing/shipping values into an admin-editable `settings` table (lamp prices, eco discount, rush rate, machine rate, bulk rules, manufacturing origin pincode/address) with a 15s read cache in the public API.
+  - Pincode-proximity shipping estimator (`internal/shipping`): compares customer pincode to the manufacturing origin via prefix depth (district/region/zone/national), admin-tunable day bands, per-pincode overrides (exact day window or fixed delivery date). Public endpoint `GET /api/shipping/estimate`; ETA shown live on `/lamp`.
+  - Separate admin server (`cmd/admin` → `techazsure-admin` container) bound to `127.0.0.1:9090` only — never behind the public proxy; `ADMIN_TOKEN` bearer auth. Embedded dashboard: settings editor, shipping band matrix, pincode manager with overrides, estimator test tool, and dispatch stage control (closes the Phase 2 admin dashboard roadmap item).
+  - Verified end-to-end: admin price/origin edits propagate to public quotes and estimates, fixed-date override honored, stage transition visible on public `/track`, unauthorized requests rejected.
+- [x] **M16: `/zones` + `/upload` bug fixes** (2026-10-17):
+  - `/zones` now queries the live backend (`/api/pincodes/check`) and shows the shipping-estimator ETA instead of a hardcoded client-side pincode algorithm that ignored admin edits; offline fallback retained.
+  - `/upload` project mode dead end fixed: mesh (STL/OBJ) uploads now get a "Configure Print & Get Quote" button — previously MaterialSelect/DeliveryTiers/PriceSummary were unreachable for mesh files.
+  - Fixed blob-URL revocation bug: the upload zone remounting on preview generation revoked the file's object URL and blanked the accepted-file card, breaking the Three.js viewer ("Error loading STL: Failed to fetch"). Real STL geometry now loads and computes true volume for quotes; photo uploads preview the placeholder mesh instead of being fed to the STL parser.

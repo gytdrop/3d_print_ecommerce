@@ -53,8 +53,8 @@ const STAGES: SpecStage[] = [
 ];
 
 const PRICING_TIERS: PricingTier[] = [
-  { id: 'small', name: 'Small Frame', price: 499, size: '10x7.5 cm' },
-  { id: 'medium', name: 'Medium Frame', price: 799, size: '15x11.2 cm', popular: true },
+  { id: 'small', name: 'Small Frame', price: 499, size: '10x8 cm' },
+  { id: 'medium', name: 'Medium Frame', price: 799, size: '15x10 cm', popular: true },
   { id: 'large', name: 'Large Frame', price: 1299, size: '20x15 cm' },
 ];
 

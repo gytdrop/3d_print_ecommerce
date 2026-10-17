@@ -19,14 +19,21 @@ techazsure/
     │       └── nginx.conf           # Security reverse proxy with rate limiting & CSP
     │
     ├── backend/                     # Go REST backend service
-    │   ├── Dockerfile               # Multi-stage Alpine static binary build
+    │   ├── Dockerfile               # Multi-stage Alpine build (public server + admin binaries)
     │   ├── .dockerignore            # Docker ignore file
-    │   ├── cmd/server/main.go       # HTTP server entrypoint
+    │   ├── cmd/server/main.go       # Public HTTP server entrypoint
+    │   ├── cmd/admin/               # ISOLATED admin dashboard server (127.0.0.1:9090, token auth)
+    │   │   ├── main.go              # Admin entrypoint: auth middleware + embedded dashboard
+    │   │   └── dashboard.html       # Self-contained ops dashboard (settings, pincodes, orders)
     │   ├── go.mod / go.sum          # Go module definitions
     │   └── internal/
+    │       ├── admin/               # Admin REST API (config, pincode overrides, dispatch stages)
+    │       ├── config/              # DB-backed platform settings (pricing & shipping, cached)
     │       ├── db/                  # DB connection pool, schema.sql & seed.sql
-    │       ├── handlers/            # REST API handlers (health, pincodes, quote, orders, products, materials, track)
-    │       └── service/             # Volume calculation & expedite surcharge business logic
+    │       ├── handlers/            # Public REST handlers (health, pincodes, quote, orders, shipping estimate, lamp)
+    │       ├── lithophane/          # Photo → watertight lithophane STL generator
+    │       ├── service/             # Pricing engines (volumetric STL + lamp matrix)
+    │       └── shipping/            # Pincode-proximity delivery estimator (vs manufacturing origin)
     │
     └── frontend/                    # Next.js 16 storefront application
         ├── Dockerfile               # Multi-stage standalone Next.js build

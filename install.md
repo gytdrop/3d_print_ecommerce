@@ -96,3 +96,38 @@ docker compose --env-file .env.docker down
 # Stop all containers and wipe database volume (clean reset)
 docker compose --env-file .env.docker down -v
 ```
+
+---
+
+## 4. Admin Ops Dashboard (Isolated Service)
+
+The admin dashboard runs as a **separate service** from the public site for security. It is never routed through the public Nginx proxy and binds to `127.0.0.1:9090` on the host only.
+
+### Setup
+1. Set a strong token in `.env.docker`:
+```
+ADMIN_TOKEN=<long random string>
+```
+Generate one:
+```bash
+openssl rand -hex 32
+```
+2. Start/rebuild the stack:
+```bash
+docker compose --env-file .env.docker up -d --build
+```
+
+### Access
+On the VPS itself: `http://127.0.0.1:9090`. From your machine, open an SSH tunnel:
+```bash
+ssh -L 9090:127.0.0.1:9090 user@your-vps
+```
+Then browse `http://localhost:9090` and paste the `ADMIN_TOKEN` to connect.
+
+### What it controls
+- **Manufacturing origin** (pincode + address) — the reference point for all shipping estimates.
+- **Pricing**: Photo Lamp size prices, eco discount, express rush rate, machine rate, bulk discount rules. Changes go live on the public site within ~15 seconds.
+- **Shipping bands**: delivery day windows per pincode-proximity level (same pincode / district / region / zone / national).
+- **Pincode overrides**: per-pincode tier, express eligibility, custom message, and either an exact day window or a fixed delivery date that overrides the algorithm.
+- **Estimator test**: preview exactly what a customer at any pincode will be shown.
+- **Dispatch control**: advance orders through sliced → in_print → qc_passed → out_for_delivery → delivered; each transition appears on the public /track page.
