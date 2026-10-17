@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import type { LampSizeId, LampOrientation, LampBoxColor } from './lampConfig';
 import { LAMP_SIZES, BOX_COLOR_HEX } from './lampConfig';
+import { buildFrameStyle, heartAlphaMask, type FrameStyleId } from './frameStyles';
 
 interface LampPreview3DProps {
   /** Cropped photo as a data URL (512px preview export). */
@@ -12,6 +13,7 @@ interface LampPreview3DProps {
   size: LampSizeId;
   orientation: LampOrientation;
   boxColor: LampBoxColor;
+  frameStyle: FrameStyleId;
   lampOn: boolean;
   /** Called when the physical switch on the side of the box is clicked. */
   onToggleLamp?: () => void;
@@ -30,6 +32,7 @@ export default function LampPreview3D({
   size,
   orientation,
   boxColor,
+  frameStyle,
   lampOn,
   onToggleLamp,
 }: LampPreview3DProps) {
@@ -186,28 +189,63 @@ export default function LampPreview3D({
     const t = 0.05; // wall thickness
 
     const group = new THREE.Group();
-    const wallMat = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(BOX_COLOR_HEX[boxColor]),
-      roughness: boxColor === 'walnut' ? 0.75 : 0.55,
-      metalness: 0.05,
-    });
+    const isLampBox = frameStyle === 'lamp-box';
+    switchMatRef.current = null;
 
-    const addWall = (sx: number, sy: number, sz: number, px: number, py: number, pz: number) => {
-      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), wallMat);
-      mesh.position.set(px, py, pz);
-      group.add(mesh);
-    };
+    if (isLampBox) {
+      const wallMat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(BOX_COLOR_HEX[boxColor]),
+        roughness: boxColor === 'walnut' ? 0.75 : 0.55,
+        metalness: 0.05,
+      });
 
-    // Back, left, right, top, bottom — front face stays open for the panel.
-    addWall(w + 2 * t, h + 2 * t, t, 0, 0, -d / 2);
-    addWall(t, h + 2 * t, d, -(w + t) / 2, 0, 0);
-    addWall(t, h + 2 * t, d, (w + t) / 2, 0, 0);
-    addWall(w + 2 * t, t, d, 0, (h + t) / 2, 0);
-    addWall(w + 2 * t, t, d, 0, -(h + t) / 2, 0);
+      const addWall = (sx: number, sy: number, sz: number, px: number, py: number, pz: number) => {
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), wallMat);
+        mesh.position.set(px, py, pz);
+        group.add(mesh);
+      };
 
-    // Lithophane panel seated in the open front face. The photo renders on
-    // the front (color map) with the 2.5D carve (displacement + bump); when
-    // the lamp is on, the same photo glows yellowish-orange from inside.
+      // Back, left, right, top, bottom — front face stays open for the panel.
+      addWall(w + 2 * t, h + 2 * t, t, 0, 0, -d / 2);
+      addWall(t, h + 2 * t, d, -(w + t) / 2, 0, 0);
+      addWall(t, h + 2 * t, d, (w + t) / 2, 0, 0);
+      addWall(w + 2 * t, t, d, 0, (h + t) / 2, 0);
+      addWall(w + 2 * t, t, d, 0, -(h + t) / 2, 0);
+
+      // Physical light switch on the right side face of the box: a base ring
+      // and a protruding button. Named 'lamp-switch' for raycast picking.
+      const switchX = w / 2 + t; // outer surface of the right wall
+      const switchBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.085, 0.085, 0.025, 24),
+        new THREE.MeshStandardMaterial({ color: 0x2a2f3a, roughness: 0.5, metalness: 0.4 }),
+      );
+      switchBase.rotation.z = Math.PI / 2; // cylinder axis along x
+      switchBase.position.set(switchX + 0.012, 0, 0);
+      switchBase.name = 'lamp-switch';
+      group.add(switchBase);
+
+      const switchMat = new THREE.MeshStandardMaterial({
+        color: 0x8a8f99,
+        roughness: 0.4,
+        metalness: 0.3,
+        emissive: new THREE.Color(GLOW_COLOR),
+        emissiveIntensity: lampOn ? 0.9 : 0,
+      });
+      switchMatRef.current = switchMat;
+      const switchBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.07, 24), switchMat);
+      switchBtn.rotation.z = Math.PI / 2;
+      switchBtn.position.set(switchX + 0.045, 0, 0);
+      switchBtn.name = 'lamp-switch';
+      group.add(switchBtn);
+    } else {
+      // Standalone frame styles (classic / minimal / vintage / heart) —
+      // geometry defined per-style in frameStyles.ts.
+      buildFrameStyle(group, frameStyle, w, h, BOX_COLOR_HEX[boxColor], boxColor === 'walnut');
+    }
+
+    // Lithophane panel: the image is shown as WHITE print with depth (bump +
+    // displacement relief). When the lamp is on, the photo glows through in
+    // yellowish-orange from the LED behind it.
     const panelMat = new THREE.MeshStandardMaterial({
       color: 0xf5f2ec,
       roughness: 0.92,
@@ -215,12 +253,15 @@ export default function LampPreview3D({
       emissive: new THREE.Color(GLOW_COLOR),
       emissiveIntensity: 0,
     });
+    if (frameStyle === 'heart') {
+      panelMat.alphaMap = heartAlphaMask();
+      panelMat.alphaTest = 0.5;
+    }
     panelMatRef.current = panelMat;
 
     if (textureDataUrl) {
       new THREE.TextureLoader().load(textureDataUrl, (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
-        panelMat.map = tex;
         panelMat.emissiveMap = tex;
         panelMat.bumpMap = tex;
         panelMat.bumpScale = 0.4;
@@ -232,45 +273,22 @@ export default function LampPreview3D({
       });
     }
 
-    const panel = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.96, h * 0.96, 96, 96), panelMat);
-    panel.position.set(0, 0, d / 2 - 0.01);
+    const panelW = frameStyle === 'heart' ? Math.min(w, h) * 1.15 : w * 0.96;
+    const panelH = frameStyle === 'heart' ? Math.min(w, h) * 1.15 : h * 0.96;
+    const panel = new THREE.Mesh(new THREE.PlaneGeometry(panelW, panelH, 96, 96), panelMat);
+    panel.position.set(0, 0, isLampBox ? d / 2 - 0.01 : 0.02);
     group.add(panel);
 
-    // Physical light switch on the right side face of the box: a base ring
-    // and a protruding button. Named 'lamp-switch' for raycast picking.
-    const switchX = w / 2 + t; // outer surface of the right wall
-    const switchBase = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.085, 0.085, 0.025, 24),
-      new THREE.MeshStandardMaterial({ color: 0x2a2f3a, roughness: 0.5, metalness: 0.4 }),
-    );
-    switchBase.rotation.z = Math.PI / 2; // cylinder axis along x
-    switchBase.position.set(switchX + 0.012, 0, 0);
-    switchBase.name = 'lamp-switch';
-    group.add(switchBase);
-
-    const switchMat = new THREE.MeshStandardMaterial({
-      color: 0x8a8f99,
-      roughness: 0.4,
-      metalness: 0.3,
-      emissive: new THREE.Color(GLOW_COLOR),
-      emissiveIntensity: lampOn ? 0.9 : 0,
-    });
-    switchMatRef.current = switchMat;
-    const switchBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.07, 24), switchMat);
-    switchBtn.rotation.z = Math.PI / 2;
-    switchBtn.position.set(switchX + 0.045, 0, 0);
-    switchBtn.name = 'lamp-switch';
-    group.add(switchBtn);
-
-    // Yellowish-orange LED glow inside the box.
+    // Yellowish-orange LED glow — inside the box, or behind the panel for
+    // flat frame styles.
     const innerLight = new THREE.PointLight(GLOW_COLOR, lampOn ? 2.2 : 0, 3);
-    innerLight.position.set(0, 0, 0);
+    innerLight.position.set(0, 0, isLampBox ? 0 : -0.04);
     group.add(innerLight);
     innerLightRef.current = innerLight;
 
     scene.add(group);
     groupRef.current = group;
-  }, [textureDataUrl, size, orientation, boxColor]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [textureDataUrl, size, orientation, boxColor, frameStyle]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Cheap lamp on/off toggle without a rebuild ─────────────────────────────
   useEffect(() => {

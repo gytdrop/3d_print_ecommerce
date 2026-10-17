@@ -149,6 +149,7 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS lamp_box_color VARCHAR(20);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS photo_url VARCHAR(1024);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS generated_stl_url VARCHAR(1024);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS stl_generation_status VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS frame_style VARCHAR(20);
 
 CREATE INDEX IF NOT EXISTS idx_orders_product_type ON orders(product_type);
 

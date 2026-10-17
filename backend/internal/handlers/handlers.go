@@ -268,6 +268,7 @@ type OrderRequest struct {
 	LampSize        string `json:"lamp_size"`
 	LampOrientation string `json:"lamp_orientation"`
 	LampBoxColor    string `json:"lamp_box_color"`
+	FrameStyle      string `json:"frame_style"`
 	PhotoURL        string `json:"photo_url"`
 }
 
@@ -384,14 +385,14 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 			file_name, file_size, volume_cm3, file_url, material_type, delivery_tier,
 			pincode, base_price, rush_surcharge, bulk_discount, final_price,
 			shipping_address, contact_email, contact_phone, status,
-			product_type, lamp_size, lamp_orientation, lamp_box_color, photo_url, stl_generation_status
+			product_type, lamp_size, lamp_orientation, lamp_box_color, photo_url, stl_generation_status, frame_style
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, 'order_placed',
-			$15, NULLIF($16, ''), NULLIF($17, ''), NULLIF($18, ''), NULLIF($19, ''), NULLIF($20, ''))
+			$15, NULLIF($16, ''), NULLIF($17, ''), NULLIF($18, ''), NULLIF($19, ''), NULLIF($20, ''), NULLIF($21, ''))
 		RETURNING id`,
 		req.FileName, req.FileSize, req.VolumeCm3, req.FileURL, req.MaterialType, req.DeliveryTier,
 		req.Pincode, prices.BasePrice, prices.RushSurcharge, prices.BulkDiscount, prices.FinalPrice,
 		req.ShippingAddress, req.ContactEmail, req.ContactPhone,
-		productType, req.LampSize, req.LampOrientation, req.LampBoxColor, req.PhotoURL, stlGenStatus,
+		productType, req.LampSize, req.LampOrientation, req.LampBoxColor, req.PhotoURL, stlGenStatus, req.FrameStyle,
 	).Scan(&orderID)
 
 	if err != nil {

@@ -39,6 +39,17 @@ var LampOrientations = map[string]bool{
 	"portrait":  true,
 }
 
+// LampFrameStyles enumerates the frame styles offered by the configurator.
+// Geometry for each style lives in the frontend (frameStyles.ts); the backend
+// records the choice on the order for the print operator.
+var LampFrameStyles = map[string]bool{
+	"lamp-box": true,
+	"classic":  true,
+	"minimal":  true,
+	"vintage":  true,
+	"heart":    true,
+}
+
 // CalculateLampQuote prices a Photo Lamp Frame with the platform's shipped
 // default configuration. Prefer CalculateLampQuoteCfg in handlers so
 // admin-edited prices take effect.

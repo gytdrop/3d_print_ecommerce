@@ -35,6 +35,9 @@ export const BOX_COLOR_HEX: Record<LampBoxColor, string> = Object.fromEntries(
   BOX_COLORS.map((c) => [c.id, c.hex]),
 ) as Record<LampBoxColor, string>;
 
+/** sessionStorage key used by /explore to hand a photo into the /lamp flow. */
+export const PENDING_PHOTO_KEY = 'techaz_pending_photo';
+
 /** Minimum short-edge resolution before the soft quality warning (P0-2). */
 export const MIN_PHOTO_SHORT_EDGE = 1200;
 export const MAX_PHOTO_BYTES = 15 * 1024 * 1024;
