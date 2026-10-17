@@ -40,7 +40,9 @@ Client Browser (Port 80)
 - **Antigravity-Inspired Scrollytelling**: Architectural and design reference taken from [`antigravity.google`](https://antigravity.google/).
 - **Zero Vertical Page Displacement**: Fixed viewport pinning (`fixed inset-0 w-screen h-screen overflow-hidden bg-[#050608]`) prevents content containers from moving vertically off-screen. Wheel, touch, and keyboard deltas drive timeline progress in place.
 - **Zero-Lag Video Scrubbing**: Frame-accurate seeking against an All-Intra mechanical assembly video (`cube_assembly_intra_fast.mp4`) with hardware latching.
-- **High-Contrast Engineering Frosted Glass**: Built with dark engineering glass cards (`bg-[#0b0f19]/90 backdrop-blur-xl border border-white/15 ring-1 ring-white/10`) ensuring 100% legibility against specular 3D render highlights.
+- **Ungrouped Scene Choreography** (`components/home/StageScenes.tsx`): No content cards — every stage is decomposed into independent free-positioned elements (tag, badge, ghost step numeral, headline, chips, metric strip, CTAs, link columns) that drift in from their own directions with per-element stagger (`opacity^k`), driven by the scroll lerp so the sequence is fully scrub-reversible. Legibility over the bright video comes from local radial scrims, layered text shadows, and dark-glass chips.
+- **Engineering HUD Side Rails** (`components/hud/EngineeringHudRails.tsx`, desktop `xl+`): Left rail cycles six hand-coded blueprint figures (lamp assembly, 0.08mm layer stack, exploded LED base, Bangalore dispatch map, frame dimensions, origin compass) in sync with the stages; right rail is a live telemetry column with scrub percentage, per-stage spec readouts, and a ruler marker tracking scroll position.
+- **Floating 2.5D Product Art** (`components/home/FloatingArt.tsx`): Glossy gradient-faced SVG vectors (glowing lithophane lamp, print-layer slabs, LED base, dispatch parcel, fanned frames) float per stage on offset bob cycles, matched to each stage's subject. All visuals are inline SVG — zero external assets.
 - **6 Unified Stages**:
   1. `Stage 01 (Overview)`: Hardware Architecture & Optical Additive Fabrication
   2. `Stage 02 (Slicing)`: 0.08mm Layer Precision Across 5 Engineering Polymers
@@ -77,6 +79,15 @@ Client Browser (Port 80)
 | **Database** | PostgreSQL 16 Alpine (`pgcrypto`) |
 
 ---
+
+## Deployment Target
+
+**This application is deployed on a self-managed VPS** (not a managed platform such as Vercel).
+The Docker Compose stack below is the deployment unit: Nginx terminates on port 80 and reverse-proxies
+to the Next.js frontend (:3000) and the Go backend (:8080), which connects to PostgreSQL (:5432).
+All frontend visuals (SVG HUD elements, videos, product imagery) are self-contained in the repo /
+`frontend/public` — no external CDNs, fonts, or image services — so the site runs fully offline-capable
+behind the VPS proxy.
 
 ## Quick Start (Docker)
 

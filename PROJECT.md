@@ -1,5 +1,9 @@
 # Project: Go/PostgreSQL Backend & Storefront Integration for TechAZsure 3D Print
 
+> **Deployment target: self-managed VPS.** The entire stack ships as the Docker Compose unit
+> described below (Nginx :80 → Next.js :3000 + Go :8080 → PostgreSQL :5432). Keep all frontend
+> assets self-contained (local `/public` files, inline SVG) — no external CDN dependencies.
+
 ## Architecture
 The application is a fully containerized multi-tier e-commerce and on-demand 3D printing platform:
 
@@ -57,7 +61,10 @@ All services are orchestrated in `docker-compose.yml`:
   - `app/track/page.tsx` - Real-time 5-stage dispatch telemetry and order status tracking.
   - `app/upload/page.tsx` - Custom STL/photo order flow with Three.js preview.
   - `app/zones/page.tsx` - Bangalore delivery zone checker.
-  - `components/Fused3DScrollExperience.tsx` - Zero vertical displacement scrollytelling engine.
+  - `components/Fused3DScrollExperience.tsx` - Zero vertical displacement scrollytelling engine (scroll lerp, video scrubbing, stage fade windows, quantized state updates for render performance).
+  - `components/home/StageScenes.tsx` - Ungrouped free-positioned stage compositions (memoized; scrub-reversible per-element drift/stagger choreography).
+  - `components/home/FloatingArt.tsx` - 2.5D gradient-faced SVG product vectors floated per stage.
+  - `components/hud/EngineeringHudRails.tsx` - Blueprint figure rail (left) + live telemetry rail (right), desktop only; stage fade windows mirror `Fused3DScrollExperience` and must be kept in sync.
   - `components/layout/ConditionalHeader.tsx` & `ConditionalFooter.tsx` - Layout routing.
 - `docker/nginx/nginx.conf` - Production Nginx reverse proxy and security configuration.
 - `docker-compose.yml` - Production container orchestration definition.
