@@ -1,5 +1,9 @@
 # Project: Go/PostgreSQL Backend & Storefront Integration for TechAZsure 3D Print
 
+> **Deployment target: self-managed VPS.** The entire stack ships as the Docker Compose unit
+> described below (Nginx :80 → Next.js :3000 + Go :8080 → PostgreSQL :5432). Keep all frontend
+> assets self-contained (local `/public` files, inline SVG) — no external CDN dependencies.
+
 ## Architecture
 The application is a fully containerized multi-tier e-commerce and on-demand 3D printing platform:
 

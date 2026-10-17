@@ -11,6 +11,7 @@ import {
   Mail
 } from 'lucide-react';
 import { siteContent } from '@/config/siteContent';
+import EngineeringHudRails from '@/components/hud/EngineeringHudRails';
 
 interface StageInfo {
   step: string;
@@ -338,7 +339,10 @@ export default function Fused3DScrollExperience() {
 
         {/* Center Stage: All stages fade in/out in the exact same coordinates */}
         <div className="w-full max-w-6xl mx-auto my-auto relative min-h-[380px] flex items-center justify-center">
-          
+
+          {/* Engineering HUD side rails (decorative, desktop only) */}
+          <EngineeringHudRails scrollProgress={scrollProgress} activeStepIndex={activeStepIndex} />
+
           {/* ─── Stages 01 to 04: Product Capabilities (Transparent Frosted Glass) ─── */}
           {STAGES.map((stage, idx) => {
             const opacity = getStageOpacity(idx);

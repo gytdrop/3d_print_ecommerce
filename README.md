@@ -78,6 +78,15 @@ Client Browser (Port 80)
 
 ---
 
+## Deployment Target
+
+**This application is deployed on a self-managed VPS** (not a managed platform such as Vercel).
+The Docker Compose stack below is the deployment unit: Nginx terminates on port 80 and reverse-proxies
+to the Next.js frontend (:3000) and the Go backend (:8080), which connects to PostgreSQL (:5432).
+All frontend visuals (SVG HUD elements, videos, product imagery) are self-contained in the repo /
+`frontend/public` — no external CDNs, fonts, or image services — so the site runs fully offline-capable
+behind the VPS proxy.
+
 ## Quick Start (Docker)
 
 To launch the complete multi-container stack:
