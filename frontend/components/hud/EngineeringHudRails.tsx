@@ -15,11 +15,11 @@ interface HudProps {
   activeStepIndex: number;
 }
 
-const STROKE = 'rgba(255,255,255,0.35)';
-const STROKE_DIM = 'rgba(255,255,255,0.18)';
-const STROKE_HI = 'rgba(255,255,255,0.7)';
-const LABEL = 'rgba(226,232,240,0.75)';
-const LABEL_DIM = 'rgba(148,163,184,0.7)';
+const STROKE = 'rgba(255,255,255,0.45)';
+const STROKE_DIM = 'rgba(255,255,255,0.25)';
+const STROKE_HI = 'rgba(255,255,255,0.8)';
+const LABEL = 'rgba(241,245,249,0.95)';
+const LABEL_DIM = 'rgba(203,213,225,0.9)';
 
 const mono = {
   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
@@ -410,13 +410,17 @@ export default function EngineeringHudRails({ scrollProgress, activeStepIndex }:
   const pct = Math.round(scrollProgress * 100);
 
   return (
-    <div aria-hidden="true" className="hidden xl:block pointer-events-none select-none">
+    <div
+      aria-hidden="true"
+      className="hidden xl:block pointer-events-none select-none"
+      style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9)) drop-shadow(0 4px 16px rgba(0,0,0,0.6))' }}
+    >
       {/* ─── Left rail: per-stage blueprint diagram ─── */}
       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-52 2xl:w-60">
         <div className="border-l border-t border-white/10 rounded-tl-xl pl-4 pt-3 pr-2">
           <div className="flex items-center gap-2 mb-1">
             <span className="w-1 h-1 rounded-full bg-white/60" />
-            <span className="text-[9px] font-mono text-slate-400 tracking-[0.18em]">
+            <span className="text-[9px] font-mono text-slate-300 tracking-[0.18em]">
               BLUEPRINT // {DIAGRAM_TAGS[activeStepIndex]}
             </span>
           </div>
@@ -435,7 +439,7 @@ export default function EngineeringHudRails({ scrollProgress, activeStepIndex }:
             ))}
           </div>
         </div>
-        <div className="mt-2 pl-4 flex items-center gap-2 text-[9px] font-mono text-slate-500">
+        <div className="mt-2 pl-4 flex items-center gap-2 text-[9px] font-mono text-slate-400">
           <span className="inline-block w-6 border-t border-white/20" />
           <span>DWG NO. TAZ-3DP-{String(activeStepIndex + 1).padStart(2, '0')}</span>
         </div>
@@ -447,7 +451,7 @@ export default function EngineeringHudRails({ scrollProgress, activeStepIndex }:
         <div className="flex flex-col justify-between border-r border-t border-white/10 rounded-tr-xl pr-4 pt-3 pl-2 min-h-[320px]">
           <div>
             <div className="flex items-center justify-end gap-2 mb-3">
-              <span className="text-[9px] font-mono text-slate-400 tracking-[0.18em]">
+              <span className="text-[9px] font-mono text-slate-300 tracking-[0.18em]">
                 TELEMETRY // LIVE
               </span>
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400/80 animate-pulse" />
@@ -466,7 +470,7 @@ export default function EngineeringHudRails({ scrollProgress, activeStepIndex }:
                   </div>
                   {block.rows.map(([k, v]) => (
                     <div key={k} className="flex items-center justify-end gap-2 leading-5">
-                      <span className="text-[9px] font-mono text-slate-500">{k}</span>
+                      <span className="text-[9px] font-mono text-slate-400">{k}</span>
                       <span className="inline-block w-3 border-t border-white/15" />
                       <span className="text-[9px] font-mono text-slate-300">{v}</span>
                     </div>
@@ -477,18 +481,18 @@ export default function EngineeringHudRails({ scrollProgress, activeStepIndex }:
 
             {/* progress readout */}
             <div className="mt-4 text-right">
-              <div className="text-[9px] font-mono text-slate-500 mb-1">TIMELINE</div>
+              <div className="text-[9px] font-mono text-slate-400 mb-1">TIMELINE</div>
               <div className="text-lg font-mono text-slate-200 tabular-nums leading-none">
                 {String(pct).padStart(3, '0')}
-                <span className="text-[10px] text-slate-500">%</span>
+                <span className="text-[10px] text-slate-400">%</span>
               </div>
-              <div className="mt-1.5 text-[9px] font-mono text-slate-500">
+              <div className="mt-1.5 text-[9px] font-mono text-slate-400">
                 STAGE {String(activeStepIndex + 1).padStart(2, '0')} / 06
               </div>
             </div>
           </div>
 
-          <div className="mt-4 text-right text-[9px] font-mono text-slate-600 tracking-wider pb-1">
+          <div className="mt-4 text-right text-[9px] font-mono text-slate-500 tracking-wider pb-1">
             SYS NOMINAL
           </div>
         </div>

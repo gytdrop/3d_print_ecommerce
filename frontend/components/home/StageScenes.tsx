@@ -46,11 +46,13 @@ const drift = (o: number, k: number, dx: number, dy: number) => {
   };
 };
 
-const TS = '[text-shadow:0_2px_14px_rgba(0,0,0,0.95)]';
-const TS_SM = '[text-shadow:0_1px_8px_rgba(0,0,0,0.9)]';
+/* Layered shadows: a tight dark edge for contrast + a wide soft halo to kill
+   bright video hotspots behind the glyphs. */
+const TS = '[text-shadow:0_1px_3px_rgba(0,0,0,0.95),0_3px_20px_rgba(0,0,0,0.9),0_0_40px_rgba(0,0,0,0.6)]';
+const TS_SM = '[text-shadow:0_1px_2px_rgba(0,0,0,0.95),0_2px_12px_rgba(0,0,0,0.9)]';
 
 const CHIP =
-  'text-[11px] font-mono text-slate-200 bg-white/10 px-3 py-1.5 rounded-md border border-white/15 backdrop-blur-sm shadow-sm';
+  'text-[11px] font-mono text-slate-100 bg-black/45 px-3 py-1.5 rounded-md border border-white/20 backdrop-blur-md shadow-sm';
 
 /** Blueprint corner brackets + periodic specular sweep framing the scene zone. */
 export function HudFrame() {
@@ -81,19 +83,19 @@ export function SpecStageScene({ stage, o }: { stage: SpecStage; o: number }) {
           style={{
             opacity: o,
             background:
-              'radial-gradient(ellipse at 32% 50%, rgba(5,6,8,0.75) 0%, rgba(5,6,8,0.4) 55%, rgba(5,6,8,0) 78%)',
+              'radial-gradient(ellipse at 32% 50%, rgba(5,6,8,0.88) 0%, rgba(5,6,8,0.55) 55%, rgba(5,6,8,0) 80%)',
           }}
         />
 
         {/* Tag — drifts in from the left */}
         <div className="absolute left-0 top-0 flex items-center gap-2.5" style={drift(o, 1, -28, 0)}>
-          <span className="w-2 h-2 border border-white/50 rotate-45" />
-          <span className={`font-mono text-xs text-slate-300 tracking-[0.2em] ${TS_SM}`}>{stage.tag}</span>
+          <span className="w-2 h-2 border border-white/60 rotate-45" />
+          <span className={`font-mono text-xs text-slate-100 tracking-[0.2em] ${TS_SM}`}>{stage.tag}</span>
         </div>
 
         {/* Badge — drifts in from the right */}
         <div className="absolute right-0 top-0" style={drift(o, 1.15, 28, 0)}>
-          <span className="text-xs font-medium text-slate-200 bg-white/10 px-3 py-1 rounded-full border border-white/15 backdrop-blur-sm shadow-sm">
+          <span className="text-xs font-medium text-slate-100 bg-black/45 px-3 py-1 rounded-full border border-white/20 backdrop-blur-md shadow-sm">
             {stage.badge}
           </span>
         </div>
@@ -116,7 +118,7 @@ export function SpecStageScene({ stage, o }: { stage: SpecStage; o: number }) {
             {stage.title}
           </h1>
           <p
-            className={`mt-5 max-w-md text-sm text-slate-200 leading-relaxed ${TS_SM}`}
+            className={`mt-5 max-w-md text-sm text-slate-100 leading-relaxed ${TS_SM}`}
             style={drift(o, 1.35, 0, 46)}
           >
             {stage.desc}
@@ -134,7 +136,7 @@ export function SpecStageScene({ stage, o }: { stage: SpecStage; o: number }) {
 
         {/* Metric strip — rises from the bottom left */}
         <div
-          className="absolute left-0 bottom-0 text-[11px] font-mono text-slate-200 bg-black/45 py-2 px-3 rounded-lg border border-white/15 backdrop-blur-md shadow-sm"
+          className="absolute left-0 bottom-0 text-[11px] font-mono text-slate-100 bg-black/50 py-2 px-3 rounded-lg border border-white/20 backdrop-blur-md shadow-sm"
           style={drift(o, 1.6, 0, 26)}
         >
           {stage.metric}
@@ -208,14 +210,14 @@ export function PricingScene({ o, tiers }: { o: number; tiers: PricingTier[] }) 
           style={{
             opacity: o,
             background:
-              'radial-gradient(ellipse at 50% 48%, rgba(5,6,8,0.7) 0%, rgba(5,6,8,0.35) 60%, rgba(5,6,8,0) 80%)',
+              'radial-gradient(ellipse at 50% 48%, rgba(5,6,8,0.85) 0%, rgba(5,6,8,0.5) 60%, rgba(5,6,8,0) 82%)',
           }}
         />
 
         {/* Heading — from the left */}
         <div className="absolute left-0 top-0 max-w-sm" style={drift(o, 1, -26, 0)}>
           <h2 className={`text-2xl font-semibold text-white tracking-tight ${TS}`}>Select Frame Dimensions</h2>
-          <p className={`mt-1.5 text-xs text-slate-300 ${TS_SM}`}>
+          <p className={`mt-1.5 text-xs text-slate-200 ${TS_SM}`}>
             Every unit includes high-resolution relief mapping, custom stand, and warm LED base.
           </p>
         </div>
@@ -223,7 +225,7 @@ export function PricingScene({ o, tiers }: { o: number; tiers: PricingTier[] }) 
         {/* Catalogue link — from the right */}
         <Link
           href="/explore"
-          className={`absolute right-0 top-1.5 text-xs text-slate-300 hover:text-white transition-colors ${TS_SM}`}
+          className={`absolute right-0 top-1.5 text-xs text-slate-200 hover:text-white transition-colors ${TS_SM}`}
           style={drift(o, 1.2, 26, 0)}
         >
           View All Products →
@@ -265,7 +267,7 @@ export function PricingScene({ o, tiers }: { o: number; tiers: PricingTier[] }) 
 
         {/* Perks — bottom left */}
         <div
-          className={`absolute left-0 bottom-0 flex items-center gap-5 text-xs text-slate-300 ${TS_SM}`}
+          className={`absolute left-0 bottom-0 flex items-center gap-5 text-xs text-slate-200 ${TS_SM}`}
           style={drift(o, 1.7, 0, 24)}
         >
           <span className="flex items-center gap-1.5">
@@ -334,15 +336,15 @@ export function FooterScene({ o }: { o: number }) {
           style={{
             opacity: o,
             background:
-              'radial-gradient(ellipse at 30% 50%, rgba(5,6,8,0.75) 0%, rgba(5,6,8,0.4) 55%, rgba(5,6,8,0) 78%)',
+              'radial-gradient(ellipse at 30% 50%, rgba(5,6,8,0.88) 0%, rgba(5,6,8,0.55) 55%, rgba(5,6,8,0) 80%)',
           }}
         />
 
         {/* Brand block — from the left */}
         <div className="absolute left-0 top-[14%] max-w-sm" style={drift(o, 1, -30, 0)}>
           <div className={`text-2xl font-semibold text-white tracking-tight ${TS}`}>TechAZsure 3D Print</div>
-          <p className={`mt-3 text-sm text-slate-200 leading-relaxed ${TS_SM}`}>{siteContent.footer.description}</p>
-          <div className={`mt-4 flex items-center gap-5 text-xs text-slate-300 ${TS_SM}`}>
+          <p className={`mt-3 text-sm text-slate-100 leading-relaxed ${TS_SM}`}>{siteContent.footer.description}</p>
+          <div className={`mt-4 flex items-center gap-5 text-xs text-slate-200 ${TS_SM}`}>
             <span className="flex items-center gap-1.5">
               <MapPin size={12} className="text-slate-400" />
               Bangalore, India
@@ -359,8 +361,8 @@ export function FooterScene({ o }: { o: number }) {
 
         {/* Store column — drops in from above */}
         <div className="absolute right-[24%] top-[16%] space-y-2.5" style={drift(o, 1.3, 0, -26)}>
-          <div className={`text-xs font-semibold text-slate-200 uppercase tracking-wider ${TS_SM}`}>Store</div>
-          <ul className={`space-y-2 text-xs text-slate-300 ${TS_SM}`}>
+          <div className={`text-xs font-semibold text-white uppercase tracking-wider ${TS_SM}`}>Store</div>
+          <ul className={`space-y-2 text-xs text-slate-200 ${TS_SM}`}>
             <li>
               <Link href="/explore" className="hover:text-white transition-colors">
                 All Products
@@ -381,8 +383,8 @@ export function FooterScene({ o }: { o: number }) {
 
         {/* Company column — from the right */}
         <div className="absolute right-0 top-[16%] space-y-2.5" style={drift(o, 1.5, 26, 0)}>
-          <div className={`text-xs font-semibold text-slate-200 uppercase tracking-wider ${TS_SM}`}>Company</div>
-          <ul className={`space-y-2 text-xs text-slate-300 ${TS_SM}`}>
+          <div className={`text-xs font-semibold text-white uppercase tracking-wider ${TS_SM}`}>Company</div>
+          <ul className={`space-y-2 text-xs text-slate-200 ${TS_SM}`}>
             <li>
               <Link href="/about" className="hover:text-white transition-colors">
                 About Us
@@ -400,7 +402,7 @@ export function FooterScene({ o }: { o: number }) {
         </div>
 
         {/* Copyright — rises from the bottom */}
-        <div className={`absolute left-0 bottom-0 text-xs text-slate-400 ${TS_SM}`} style={drift(o, 1.7, 0, 20)}>
+        <div className={`absolute left-0 bottom-0 text-xs text-slate-300 ${TS_SM}`} style={drift(o, 1.7, 0, 20)}>
           © {year} TechAZsure Technologies Pvt. Ltd. All rights reserved.
         </div>
 
