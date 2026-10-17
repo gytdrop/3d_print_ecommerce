@@ -104,62 +104,77 @@ export default function ModelViewer() {
     const modelGroup = new THREE.Group();
     scene.add(modelGroup);
 
-    // Load STL Geometry
+    // Load STL Geometry. `disposed` silences late callbacks after unmount or
+    // after the user removes the file (its blob URL gets revoked, which makes
+    // an in-flight fetch reject with a NetworkError).
+    let disposed = false;
     const loader = new STLLoader();
-    loader.load(
-      fileUrl,
-      (geometry) => {
-        geometry.computeBoundingBox();
-        geometry.computeVertexNormals();
+    const loadGeometry = (url: string) => {
+      const isUserMesh = url !== '/placeholder.stl';
+      loader.load(
+        url,
+        (geometry) => {
+          if (disposed) return;
+          geometry.computeBoundingBox();
+          geometry.computeVertexNormals();
 
-        const bbox = geometry.boundingBox!;
-        const center = new THREE.Vector3();
-        bbox.getCenter(center);
-        geometry.center();
+          const bbox = geometry.boundingBox!;
+          const center = new THREE.Vector3();
+          bbox.getCenter(center);
+          geometry.center();
 
-        const size = new THREE.Vector3();
-        bbox.getSize(size);
-        const maxDim = Math.max(size.x, size.y, size.z);
-        const scale = maxDim > 0 ? 18 / maxDim : 1;
-        geometry.scale(scale, scale, scale);
+          const size = new THREE.Vector3();
+          bbox.getSize(size);
+          const maxDim = Math.max(size.x, size.y, size.z);
+          const scale = maxDim > 0 ? 18 / maxDim : 1;
+          geometry.scale(scale, scale, scale);
 
-        const material = new THREE.MeshPhysicalMaterial({
-          color: 0x0ea5e9,
-          roughness: 0.25,
-          metalness: 0.2,
-          transmission: 0.4,
-          thickness: 0.8,
-          side: THREE.DoubleSide,
-        });
-
-        const mesh = new THREE.Mesh(geometry, material);
-        meshRef.current = mesh;
-        modelGroup.add(mesh);
-
-        const vol = calculateVolume(geometry);
-        setLoading(false);
-
-        // Update zustand store
-        if (fileData) {
-          setFileData({
-            ...fileData,
-            volumeCm3: parseFloat(vol.toFixed(2)),
-            dimensions: `${size.x.toFixed(0)}x${size.y.toFixed(0)}x${size.z.toFixed(0)} mm`,
+          const material = new THREE.MeshPhysicalMaterial({
+            color: 0x0ea5e9,
+            roughness: 0.25,
+            metalness: 0.2,
+            transmission: 0.4,
+            thickness: 0.8,
+            side: THREE.DoubleSide,
           });
+
+          const mesh = new THREE.Mesh(geometry, material);
+          meshRef.current = mesh;
+          modelGroup.add(mesh);
+
+          setLoading(false);
+
+          // Only the user's real mesh feeds volume/dimensions into the quote —
+          // the placeholder's geometry must never influence pricing.
+          if (fileData && isUserMesh) {
+            const vol = calculateVolume(geometry);
+            setFileData({
+              ...fileData,
+              volumeCm3: parseFloat(vol.toFixed(2)),
+              dimensions: `${size.x.toFixed(0)}x${size.y.toFixed(0)}x${size.z.toFixed(0)} mm`,
+            });
+          }
+        },
+        undefined,
+        (err) => {
+          if (disposed) return;
+          console.warn(`[ModelViewer] Could not load mesh from ${url}:`, err);
+          if (isUserMesh) {
+            // Blob unavailable or unparsable — fall back to the bundled sample.
+            loadGeometry('/placeholder.stl');
+            return;
+          }
+          // Last resort: procedural prism so the viewport is never empty.
+          const fallbackGeom = new THREE.CylinderGeometry(6, 6, 12, 32);
+          const fallbackMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 });
+          const fallbackMesh = new THREE.Mesh(fallbackGeom, fallbackMat);
+          meshRef.current = fallbackMesh;
+          modelGroup.add(fallbackMesh);
+          setLoading(false);
         }
-      },
-      undefined,
-      (err) => {
-        console.error('Error loading STL:', err);
-        // Fallback procedural prism
-        const fallbackGeom = new THREE.CylinderGeometry(6, 6, 12, 32);
-        const fallbackMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 });
-        const fallbackMesh = new THREE.Mesh(fallbackGeom, fallbackMat);
-        meshRef.current = fallbackMesh;
-        modelGroup.add(fallbackMesh);
-        setLoading(false);
-      }
-    );
+      );
+    };
+    loadGeometry(fileUrl);
 
     // Mouse Controls
     const onMouseDown = (e: MouseEvent) => {
@@ -223,6 +238,7 @@ export default function ModelViewer() {
     animate();
 
     return () => {
+      disposed = true;
       mount.removeEventListener('mousedown', onMouseDown);
       window.removeEventListener('mousemove', onMouseMove);
       window.removeEventListener('mouseup', onMouseUp);
