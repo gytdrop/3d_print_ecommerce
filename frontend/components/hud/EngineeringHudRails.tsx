@@ -419,7 +419,7 @@ function EngineeringHudRails({ scrollProgress, activeStepIndex }: HudProps) {
     >
       {/* ─── Left rail: per-stage blueprint diagram ─── */}
       <div className="absolute left-0 top-1/2 -translate-y-1/2 w-52 2xl:w-60">
-        <div className="border-l border-t border-white/10 rounded-tl-xl pl-4 pt-3 pr-2">
+        <div className="border-l border-t border-white/10 rounded-xl pl-4 pt-3 pr-2 pb-3 bg-[#05070c]/60 backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-1">
             <span className="w-1 h-1 rounded-full bg-white/60" />
             <span className="text-[9px] font-mono text-slate-300 tracking-[0.18em]">
@@ -450,7 +450,7 @@ function EngineeringHudRails({ scrollProgress, activeStepIndex }: HudProps) {
       {/* ─── Right rail: telemetry column ─── */}
       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-44 2xl:w-48 flex items-stretch justify-end gap-3">
         {/* readout panel */}
-        <div className="flex flex-col justify-between border-r border-t border-white/10 rounded-tr-xl pr-4 pt-3 pl-2 min-h-[320px]">
+        <div className="flex flex-col justify-between border-r border-t border-white/10 rounded-xl pr-4 pt-3 pl-3 pb-2 min-h-[320px] bg-[#05070c]/60 backdrop-blur-sm">
           <div>
             <div className="flex items-center justify-end gap-2 mb-3">
               <span className="text-[9px] font-mono text-slate-300 tracking-[0.18em]">

@@ -409,8 +409,9 @@ export const FooterScene = memo(function FooterScene({ o }: { o: number }) {
           </div>
         </div>
 
-        {/* Link columns — rigid right-anchored group, shared baseline with brand */}
-        <div className="absolute right-0 top-[14%] flex gap-14">
+        {/* Link columns — rigid right-anchored group on a dark-glass surface so
+            the small links stay legible over bright video regions */}
+        <div className="absolute right-0 top-[14%] flex gap-10 bg-black/45 backdrop-blur-md border border-white/10 rounded-xl p-5">
           <div className="space-y-2.5" style={drift(o, 1.3, 0, -26)}>
             <div className={`text-xs font-semibold text-white uppercase tracking-wider ${TS_SM}`}>
               <span className="block w-8 border-t border-white/40 mb-2" />
