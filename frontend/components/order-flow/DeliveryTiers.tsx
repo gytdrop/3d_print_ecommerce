@@ -90,7 +90,7 @@ function PincodeBanner() {
     e.preventDefault();
     if (value.length !== 6) return;
     try {
-      const response = await fetch(`http://localhost:8080/api/pincodes/check?pincode=${value}`);
+      const response = await fetch(`/api/pincodes/check?pincode=${value}`);
       if (!response.ok) {
         console.error('Failed to check pincode');
         return;
@@ -100,7 +100,15 @@ function PincodeBanner() {
       setPincodeEligible(data.eligible);
       setPincodeMessage(data.message);
     } catch (error) {
-      console.error('Error checking pincode:', error);
+      console.warn('Backend pincode check offline, using local validation');
+      const isBlr = value.startsWith('560');
+      setPincode(value);
+      setPincodeEligible(isBlr);
+      setPincodeMessage(
+        isBlr
+          ? '8-Hour Express Available! Order before 2 PM for tonight.'
+          : 'Standard Delivery (2-4 business days)'
+      );
     }
   };
 

@@ -162,7 +162,7 @@ export default function PriceSummary() {
     };
 
     try {
-      const response = await fetch('http://localhost:8080/api/orders', {
+      const response = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -179,7 +179,7 @@ export default function PriceSummary() {
       }
     } catch (error) {
       console.error('Error confirming order:', error);
-      alert('Failed to connect to the backend server. Make sure the backend is running at http://localhost:8080.');
+      alert('Failed to connect to the backend server. Please verify your connection.');
     }
   };
 

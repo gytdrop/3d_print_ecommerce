@@ -19,13 +19,24 @@ function getLocalNetworkIPs(): string[] {
 }
 
 const nextConfig: NextConfig = {
+  // Standalone output produces a self-contained production bundle for Docker
+  output: "standalone",
+
   // Allow HMR / dev resource requests from all local network IPs.
-  // This silences the "Blocked cross-origin request" warning when
-  // the browser connects via the LAN address instead of localhost.
   allowedDevOrigins: getLocalNetworkIPs(),
 
-  // Silence the "multiple lockfiles" workspace-root warning by explicitly
-  // anchoring Turbopack to this project's own directory.
+  // Proxy /api requests to Go backend service if running locally or in Docker
+  async rewrites() {
+    const backendUrl = process.env.BACKEND_API_URL || "http://127.0.0.1:8080";
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${backendUrl}/api/:path*`,
+      },
+    ];
+  },
+
+  // Silence the "multiple lockfiles" workspace-root warning
   turbopack: {
     root: __dirname,
   },

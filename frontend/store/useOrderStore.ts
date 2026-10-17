@@ -257,7 +257,7 @@ export const useOrderStore = create<OrderState>()((set, get) => ({
       : (uploadMode === 'gift' ? 18.88 : 50.0);
 
     try {
-      const response = await fetch('http://localhost:8080/api/quote', {
+      const response = await fetch('/api/quote', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -288,7 +288,13 @@ export const useOrderStore = create<OrderState>()((set, get) => ({
         },
       });
     } catch (error) {
-      console.error('Error fetching quote:', error);
+      console.warn('Backend quote service offline, using client calculation engine');
+      const currentBase = get().basePrice || getBasePriceForVolume(volume_cm3, materialType);
+      const breakdown = calculatePriceBreakdown(currentBase, deliveryTier);
+      set({
+        basePrice: breakdown.basePrice,
+        priceBreakdown: breakdown,
+      });
     }
   },
 }));

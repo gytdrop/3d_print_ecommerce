@@ -1,38 +1,80 @@
 # Project: Go/PostgreSQL Backend & Storefront Integration for TechAZsure 3D Print
 
 ## Architecture
-The application consists of a Go REST backend and a Next.js frontend storefront, with a PostgreSQL database.
+The application is a fully containerized multi-tier e-commerce and on-demand 3D printing platform:
 
 ```
-                  ┌──────────────────┐
-                  │ Next.js Frontend │
-                  └────────┬─────────┘
-                           │
-             HTTP REST API │ (Ports, e.g. 8080)
-                           ▼
-                  ┌──────────────────┐
-                  │    Go Backend    │
-                  └────────┬─────────┘
-                           │
-            SQL Connection │ (DATABASE_URL)
-                           ▼
-                  ┌──────────────────┐
-                  │    PostgreSQL    │
-                  └──────────────────┘
+                            ┌────────────────────────┐
+                            │ Client Browser / User  │
+                            └───────────┬────────────┘
+                                        │ HTTP Port 80
+                                        ▼
+                   ┌──────────────────────────────────────────┐
+                   │    Nginx Reverse Proxy & Security SaaS    │
+                   │  - Rate Limiting (15 req/s, burst 20)    │
+                   │  - Hardened Security Headers (CSP, HSTS) │
+                   │  - Microservice Routing (/ & /api/)      │
+                   └────────────┬─────────────────────────────┘
+                                │
+        ┌───────────────────────┴───────────────────────┐
+        │                                               │
+        ▼ (Port 3000)                                   ▼ (Port 8080)
+┌───────────────────────────────┐               ┌───────────────────────────────┐
+│     Next.js 16 Storefront     │               │        Go REST Backend        │
+│   (Standalone Node Runner)    │               │    (Alpine Static Binary)     │
+│ - In-Place 3D Video Scrub (/) │               │ - Realtime Slicing Estimates  │
+│ - Curated Catalog (/explore)  │               │ - Order State Machine         │
+│ - Live Telemetry (/track)     │               │ - Bangalore Delivery Tiers    │
+│ - JSON-LD Schema.org SEO      │               │ - Health Checks & Products    │
+└───────────────────────────────┘               └───────────────┬───────────────┘
+                                                                │ SQL Connection (Port 5432)
+                                                                ▼
+                                                ┌───────────────────────────────┐
+                                                │      PostgreSQL 16 Alpine     │
+                                                │ - Pincodes, Categories        │
+                                                │ - Products, Variants          │
+                                                │ - Materials, Orders           │
+                                                │ - Order Timeline & Payments   │
+                                                └───────────────────────────────┘
 ```
+
+## Docker Container Composition
+All services are orchestrated in `docker-compose.yml`:
+- `techazsure-proxy`: Port 80 exposed. Nginx reverse proxy with SSL termination readiness and rate limiting.
+- `techazsure-frontend`: Standalone Next.js 16 container built with React 19 compatibility (`--legacy-peer-deps`).
+- `techazsure-backend`: High-performance Go 1.24 static binary container.
+- `techazsure-db`: PostgreSQL 16 Alpine with automatic embedded migrations and seeds.
 
 ## Code Layout
 - `backend/` - Go REST backend source files.
-  - `cmd/server/main.go` - Entrypoint.
-  - `internal/db/` - DB models and seed scripts.
+  - `cmd/server/main.go` - Server entrypoint registering `/api/health`, `/api/pincodes/check`, `/api/quote`, `/api/orders`, `/api/orders/track`, `/api/products`, `/api/materials`.
+  - `internal/db/` - DB initialization (`db.go`), expanded schema DDL (`schema.sql`), and seeds (`seed.sql`).
   - `internal/handlers/` - REST API handler implementations.
-  - `internal/service/` - Pricing and business logic.
+  - `internal/service/` - Pricing and physical material calculation logic.
 - `frontend/` - Next.js storefront source files.
-- `integration-tests/` - Integration tests.
+  - `app/page.tsx` - In-place 3D showcase mounting `Fused3DScrollExperience`.
+  - `app/explore/page.tsx` - E-commerce product catalog with Schema.org `ItemList` & `Product` structured data.
+  - `app/track/page.tsx` - Real-time 5-stage dispatch telemetry and order status tracking.
+  - `app/upload/page.tsx` - Custom STL/photo order flow with Three.js preview.
+  - `app/zones/page.tsx` - Bangalore delivery zone checker.
+  - `components/Fused3DScrollExperience.tsx` - Zero vertical displacement scrollytelling engine.
+  - `components/layout/ConditionalHeader.tsx` & `ConditionalFooter.tsx` - Layout routing.
+- `docker/nginx/nginx.conf` - Production Nginx reverse proxy and security configuration.
+- `docker-compose.yml` - Production container orchestration definition.
 
 ## Interface Contracts
 
-### 1. `GET /api/pincodes/check?pincode=560001`
+### 1. `GET /api/health`
+- Response (200 OK):
+  ```json
+  {
+    "database": "healthy",
+    "service": "techazsure-backend",
+    "status": "ok"
+  }
+  ```
+
+### 2. `GET /api/pincodes/check?pincode=560001`
 - Request Parameters:
   - `pincode`: 6-digit string
 - Response (200 OK):
@@ -45,59 +87,59 @@ The application consists of a Go REST backend and a Next.js frontend storefront,
   }
   ```
 
-### 2. `POST /api/quote`
-- Request Body:
-  ```json
-  {
-    "volume_cm3": 75.0,
-    "material_type": "pla",
-    "delivery_tier": "express-8h"
-  }
-  ```
-- Response (200 OK):
-  ```json
-  {
-    "base_price": 1420.00,
-    "bulk_discount": 142.00,
-    "rush_surcharge": 1064.58,
-    "final_price": 2342.58,
-    "rush_multiplier": 1.833,
-    "is_expedited": true
-  }
-  ```
+### 3. `GET /api/products`
+- Response (200 OK): List of catalog products from the database.
 
-### 3. `POST /api/orders`
-- Request Body:
+### 4. `GET /api/materials`
+- Response (200 OK): Physical density, cost per gram, and finish properties for engineering materials.
+
+### 5. `POST /api/orders`
+- Request Payload:
   ```json
   {
-    "file_name": "apple.stl",
-    "file_size": 133334,
-    "volume_cm3": 75.0,
-    "file_url": "https://s3.amazonaws.com/techazsure-3dprint/apple.stl",
+    "file_name": "model.stl",
+    "file_size": 1542000,
+    "volume_cm3": 35.5,
+    "file_url": "/uploads/model.stl",
     "material_type": "pla",
-    "delivery_tier": "express-8h",
-    "pincode": "560001",
-    "shipping_address": "123 Main St, Bangalore",
-    "contact_email": "customer@example.com",
-    "contact_phone": "9876543210"
+    "delivery_tier": "express",
+    "pincode": "560025",
+    "shipping_address": "Indiranagar 100ft Road, Bangalore 560025",
+    "contact_email": "user@example.com",
+    "contact_phone": "+919999988888"
   }
   ```
 - Response (201 Created):
   ```json
   {
-    "order_id": "3b29db42-a8c6-419f-b98a-54f9d0c649bd",
-    "final_price": 2342.58
+    "order_id": "3cd13477-fe72-4572-8f09-67f076df5a64",
+    "final_price": 1502.36,
+    "status": "order_placed"
   }
   ```
 
-## Milestones
-| # | Name | Scope | Dependencies | Status |
-|---|---|---|---|---|
-| 1 | DB Schema & Seeds | Create schema.sql for `pincodes` and `orders` tables; seed scripts. | None | DONE |
-| 2 | Backend Pincodes API | Implement GET /api/pincodes/check in Go. | M1 | DONE |
-| 3 | Backend Quote API | Implement POST /api/quote calculations and endpoint. | None | DONE |
-| 4 | Backend Orders API | Implement POST /api/orders database persistence. | M2, M3 | DONE |
-| 5 | Frontend Eco Tier & Pincode check | Update DeliveryTiers & store to support budget-5-7d and call backend pincode check. | M2 | DONE |
-| 6 | Frontend Quoting & Order Placement | Dynamically source quotes from Go and submit orders on Confirm Order. | M3, M4, M5 | DONE |
-| 7 | Automated Integration Tests | Automated test suite verifying pricing, pincode, and DB writes. | M4 | DONE |
-
+### 6. `GET /api/orders/track?id=<uuid>`
+- Response (200 OK):
+  ```json
+  {
+    "id": "3cd13477-fe72-4572-8f09-67f076df5a64",
+    "file_name": "model.stl",
+    "volume_cm3": 35.5,
+    "material_type": "pla",
+    "delivery_tier": "express",
+    "pincode": "560025",
+    "final_price": 1502.36,
+    "status": "order_placed",
+    "shipping_address": "Indiranagar 100ft Road, Bangalore 560025",
+    "created_at": "2026-10-17T09:42:54Z",
+    "timeline": [
+      {
+        "id": "1fc404c5-e1b4-47cd-9941-ac8a698f3538",
+        "stage": "order_placed",
+        "message": "Order registered and queued for farm slicing.",
+        "location": "Bangalore Hub",
+        "created_at": "2026-10-17T09:42:54Z"
+      }
+    ]
+  }
+  ```

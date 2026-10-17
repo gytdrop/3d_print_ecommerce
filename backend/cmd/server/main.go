@@ -21,9 +21,13 @@ func main() {
 
 	// Register routes with standard multiplexer
 	mux := http.NewServeMux()
+	mux.HandleFunc("/api/health", handlers.HandleHealth)
 	mux.HandleFunc("/api/pincodes/check", handlers.HandlePincodeCheck)
 	mux.HandleFunc("/api/quote", handlers.HandleQuote)
 	mux.HandleFunc("/api/orders", handlers.HandleOrders)
+	mux.HandleFunc("/api/orders/track", handlers.HandleOrderTracking)
+	mux.HandleFunc("/api/products", handlers.HandleProducts)
+	mux.HandleFunc("/api/materials", handlers.HandleMaterials)
 
 	// Wrap handlers with CORS middleware
 	handler := handlers.CORSMiddleware(mux)

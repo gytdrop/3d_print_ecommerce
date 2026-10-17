@@ -1,96 +1,11 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import ConditionalHeader from '@/components/layout/ConditionalHeader';
+import ConditionalFooter from '@/components/layout/ConditionalFooter';
 import { siteContent } from '@/config/siteContent';
 import { themeComboMatrix, ThemeColors } from '@/config/themes';
-import {
-  Quicksand,
-  Nunito,
-  Playfair_Display,
-  Inclusive_Sans,
-  Fredoka,
-  Lato,
-  Fraunces,
-  Cinzel,
-  Montserrat,
-  Cormorant_Garamond,
-  Cabin,
-  Open_Sans,
-  Merriweather,
-  Source_Sans_3,
-  Lora,
-  Inter,
-  Urbanist,
-  Mulish,
-  Josefin_Sans,
-  Work_Sans,
-  Bodoni_Moda,
-  Arimo,
-  Jost,
-  Assistant,
-  Varela_Round,
-  Noto_Sans,
-  PT_Serif,
-  Comfortaa,
-  Rubik,
-  Baloo_2,
-  Public_Sans,
-  Hind,
-  Prata,
-  Signika,
-  Chivo,
-  DM_Serif_Display,
-} from 'next/font/google';
-
-// ─── Font Definitions ────────────────────────────────────────────────────────
-const fontQuicksand    = Quicksand         ({ subsets: ['latin'], variable: '--font-quicksand'    });
-const fontNunito       = Nunito            ({ subsets: ['latin'], variable: '--font-nunito'       });
-const fontPlayfair     = Playfair_Display  ({ subsets: ['latin'], variable: '--font-playfair'     });
-const fontInclusiveSans= Inclusive_Sans    ({ subsets: ['latin'], variable: '--font-inclusivesans'});
-const fontFredoka      = Fredoka           ({ subsets: ['latin'], variable: '--font-fredoka'      });
-const fontLato         = Lato             ({ weight: ['400','700'], subsets: ['latin'], variable: '--font-lato'         });
-const fontFraunces     = Fraunces          ({ subsets: ['latin'], variable: '--font-fraunces'     });
-const fontCinzel       = Cinzel            ({ subsets: ['latin'], variable: '--font-cinzel'       });
-const fontMontserrat   = Montserrat        ({ subsets: ['latin'], variable: '--font-montserrat'   });
-const fontCormorant    = Cormorant_Garamond({ weight: ['400','600'], subsets: ['latin'], variable: '--font-cormorant'   });
-const fontCabin        = Cabin             ({ subsets: ['latin'], variable: '--font-cabin'        });
-const fontOpenSans     = Open_Sans         ({ subsets: ['latin'], variable: '--font-opensans'     });
-const fontMerriweather = Merriweather      ({ weight: ['400','700'], subsets: ['latin'], variable: '--font-merriweather'});
-const fontSourceSans   = Source_Sans_3     ({ subsets: ['latin'], variable: '--font-sourcesans'   });
-const fontLora         = Lora              ({ subsets: ['latin'], variable: '--font-lora'         });
-const fontInter        = Inter             ({ subsets: ['latin'], variable: '--font-inter'        });
-const fontUrbanist     = Urbanist          ({ subsets: ['latin'], variable: '--font-urbanist'     });
-const fontMulish       = Mulish            ({ subsets: ['latin'], variable: '--font-mulish'       });
-const fontJosefin      = Josefin_Sans      ({ subsets: ['latin'], variable: '--font-josefin'      });
-const fontWorkSans     = Work_Sans         ({ subsets: ['latin'], variable: '--font-worksans'     });
-const fontBodoni       = Bodoni_Moda       ({ subsets: ['latin'], variable: '--font-bodoni'       });
-const fontArimo        = Arimo             ({ subsets: ['latin'], variable: '--font-arimo'        });
-const fontJost         = Jost              ({ subsets: ['latin'], variable: '--font-jost'         });
-const fontAssistant    = Assistant         ({ subsets: ['latin'], variable: '--font-assistant'    });
-const fontVarela       = Varela_Round      ({ weight: ['400'], subsets: ['latin'], variable: '--font-varela'       });
-const fontNotoSans     = Noto_Sans         ({ subsets: ['latin'], variable: '--font-notosans'     });
-const fontPTSerif      = PT_Serif          ({ weight: ['400','700'], subsets: ['latin'], variable: '--font-ptserif'      });
-const fontComfortaa    = Comfortaa         ({ subsets: ['latin'], variable: '--font-comfortaa'    });
-const fontRubik        = Rubik             ({ subsets: ['latin'], variable: '--font-rubik'        });
-const fontBaloo        = Baloo_2           ({ subsets: ['latin'], variable: '--font-baloo'        });
-const fontPublicSans   = Public_Sans       ({ subsets: ['latin'], variable: '--font-publicsans'   });
-const fontHind         = Hind             ({ weight: ['400','600'], subsets: ['latin'], variable: '--font-hind'         });
-const fontPrata        = Prata             ({ weight: ['400'], subsets: ['latin'], variable: '--font-prata'        });
-const fontSignika      = Signika           ({ subsets: ['latin'], variable: '--font-signika'      });
-const fontChivo        = Chivo             ({ subsets: ['latin'], variable: '--font-chivo'        });
-const fontDmSerif      = DM_Serif_Display  ({ weight: ['400'], subsets: ['latin'], variable: '--font-dm-serif'     });
-
-// All font variable class names — injected on <body> so every CSS var is defined
-const ALL_FONT_VARS = [
-  fontQuicksand, fontNunito, fontPlayfair, fontInclusiveSans, fontFredoka,
-  fontLato, fontFraunces, fontCinzel, fontMontserrat, fontCormorant,
-  fontCabin, fontOpenSans, fontMerriweather, fontSourceSans, fontLora,
-  fontInter, fontUrbanist, fontMulish, fontJosefin, fontWorkSans,
-  fontBodoni, fontArimo, fontJost, fontAssistant, fontVarela,
-  fontNotoSans, fontPTSerif, fontComfortaa, fontRubik, fontBaloo,
-  fontPublicSans, fontHind, fontPrata, fontSignika, fontChivo, fontDmSerif,
-].map((f) => f.variable).join(' ');
+// System font stack matching high-performance engineering platforms
+const ALL_FONT_VARS = '';
 
 // ─── Metadata ────────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
@@ -142,12 +57,36 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <head />
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "LocalBusiness",
+              "name": "TechAZsure 3D Print",
+              "image": "https://techazsure.com/logo.png",
+              "description": "Enterprise-grade on-demand 3D printing and customized manufacturing hub with express 8-hour Bangalore delivery.",
+              "address": {
+                "@type": "PostalAddress",
+                "addressLocality": "Bangalore",
+                "addressRegion": "Karnataka",
+                "postalCode": "560001",
+                "addressCountry": "IN"
+              },
+              "priceRange": "₹149 - ₹1299",
+              "openingHours": "Mo-Su 08:00-22:00",
+              "telephone": "+91-80-3DPRINT",
+              "url": "https://techazsure.com"
+            })
+          }}
+        />
+      </head>
       <body
-        className={`antialiased ${ALL_FONT_VARS}`}
+        className={`antialiased ${ALL_FONT_VARS} bg-[#050608] text-[#f8fafc]`}
         style={{
-          '--font-heading': `var(${headingVar})`,
-          '--font-body':    `var(${bodyVar})`,
+          '--font-heading': `var(${headingVar}, var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)`,
+          '--font-body':    `var(${bodyVar}, var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif)`,
           
           '--bg-page': colors.bgPage,
           '--bg-card': colors.bgCard,
@@ -176,10 +115,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="fixed inset-0 grid-bg opacity-100 pointer-events-none z-0" aria-hidden="true" />
 
         {/* Page structure */}
-        <div className="relative z-10 flex flex-col min-h-screen w-full overflow-x-hidden">
-          <Header />
+        <div className="relative z-10 flex flex-col min-h-screen w-full">
+          <ConditionalHeader />
           <main className="flex-1">{children}</main>
-          <Footer />
+          <ConditionalFooter />
         </div>
       </body>
     </html>

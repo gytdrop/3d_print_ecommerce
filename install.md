@@ -1,298 +1,98 @@
-# Install Guide — 3D Print Ecommerce
+# Install & Deployment Guide — TechAZsure 3D Print
 
-Welcome! Follow these steps to get the project running locally after cloning the repo.
-
-> Just want it running? Pick your OS below and paste the whole block into your terminal.
+This guide covers running the application locally for development as well as spinning up the complete production multi-container Docker cluster.
 
 ---
 
-## One-shot install (copy and paste)
+## 1. Quick Start with Docker (Recommended)
 
-<details>
-<summary><b>macOS / Linux</b> — click to expand</summary>
+The entire platform is fully containerized across 4 services:
+1. `techazsure-proxy`: Hardened Nginx reverse proxy on Port 80 with rate limiting and security headers.
+2. `techazsure-frontend`: Next.js 16 standalone production container on internal Port 3000.
+3. `techazsure-backend`: High-performance Go REST service on internal Port 8080.
+4. `techazsure-db`: PostgreSQL 16 Alpine database with automatic schema migrations and seeds on internal Port 5432.
 
-> Open **Terminal** (`Cmd + Space` → "Terminal" on macOS, or your distro's terminal app).
+### Prerequisites
+- Docker Engine `24.x+` (or Docker Desktop)
+- Docker Compose `v2.x+`
 
+### One-Command Launch
 ```bash
-git clone https://github.com/gytdrop/3d_print_ecommerce.git && \
-cd 3d_print_ecommerce/frontend && \
-npm install && \
-npm run dev
+# From the project root:
+docker compose --env-file .env.docker up -d
 ```
 
-</details>
-
-<details>
-<summary><b>Windows (PowerShell)</b> — click to expand</summary>
-
-> Open **PowerShell** (`Win + X` → "Windows PowerShell" or "Terminal").
-
-```powershell
-git clone https://github.com/gytdrop/3d_print_ecommerce.git; `
-cd 3d_print_ecommerce/frontend; `
-npm install; `
-npm run dev
-```
-
-</details>
-
-<details>
-<summary><b>Windows (Command Prompt / CMD)</b> — click to expand</summary>
-
-> Open **Command Prompt** (`Win + R` → type `cmd` → Enter).
-
-```bat
-git clone https://github.com/gytdrop/3d_print_ecommerce.git & cd 3d_print_ecommerce\frontend & npm install & npm run dev
-```
-
-</details>
-
-When the dev server is ready, open **http://localhost:3000** in your browser.
-
-> What is happening: `git clone` downloads the repo, `cd` moves into the Next.js app folder, `npm install` installs all dependencies listed in `package.json`, and `npm run dev` starts the local server with hot-reload. If any command fails, jump to the [Troubleshooting](#troubleshooting) section below.
-
----
-
-## Prerequisites
-
-Make sure these are installed on your machine **before** you start.
-
-| Tool | Version | Download | Check |
-|------|---------|----------|-------|
-| **Node.js** | 18.18 or newer (LTS recommended: 20.x or 22.x) | https://nodejs.org | `node -v` |
-| **npm** | comes with Node.js | bundled | `npm -v` |
-| **Git** | latest | https://git-scm.com | `git --version` |
-
-> You can use `yarn`, `pnpm`, or `bun` instead of `npm` — the project works with all of them. Examples below use `npm`.
-
-### Optional but recommended
-
-- **VS Code** — https://code.visualstudio.com (best Next.js DX)
-- **nvm** (Node Version Manager) — https://github.com/nvm-sh/nvm — lets you switch Node versions easily
-
----
-
-## Quick Start (5 minutes)
-
+### Verify Running Containers
 ```bash
-# 1. Clone the repo
-git clone https://github.com/gytdrop/3d_print_ecommerce.git
-cd 3d_print_ecommerce
+docker ps
+```
+All containers should report `Up (healthy)`.
 
-# 2. Move into the frontend app
+### Test Endpoints
+```bash
+# 1. API Health Check
+curl -i http://localhost/api/health
+
+# 2. Products Catalog Check
+curl -s http://localhost/api/products
+
+# 3. Open in Browser
+# Homepage Showcase: http://localhost/
+# Curated Catalog:   http://localhost/explore
+# STL Customizer:    http://localhost/upload
+# Dispatch Tracking: http://localhost/track?id=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+```
+
+---
+
+## 2. Local Manual Development (Without Docker)
+
+If you prefer to run services individually without containers:
+
+### Prerequisites
+- **Node.js**: `20.x` or `22.x` (LTS)
+- **Go**: `1.22+` or `1.24`
+- **PostgreSQL**: `15+` running on `localhost:5432`
+
+### Step 1: PostgreSQL Setup
+Create the database and export the connection string:
+```bash
+createdb techazsure_3dprint
+export DATABASE_URL="postgres://postgres:postgres@localhost:5432/techazsure_3dprint?sslmode=disable"
+```
+
+### Step 2: Run Go REST Backend
+```bash
+cd backend
+go run cmd/server/main.go
+```
+*Note: Go automatically executes `schema.sql` and `seed.sql` on startup.*
+Server listens on `http://localhost:8080`.
+
+### Step 3: Run Next.js Frontend
+In a new terminal window:
+```bash
 cd frontend
-
-# 3. Install dependencies
-npm install
-
-# 4. Run the dev server
-npm run dev
-```
-
-Open **http://localhost:3000** in your browser.
-
----
-
-## What gets installed
-
-The project lives entirely inside the **`frontend/`** folder. The root contains only docs and metadata — you do not need to install anything there.
-
-### Runtime dependencies
-
-These ship with the app:
-
-- `next@16.2.9` — React framework
-- `react@19.2.4` + `react-dom@19.2.4` — UI library
-- `three@0.168` — 3D engine (used by the model viewer)
-- `@react-three/fiber` + `@react-three/drei` — React wrappers around Three.js
-- `zustand` — state management for the order flow
-- `framer-motion` — animations
-- `lucide-react` — icons
-
-### Dev dependencies
-
-- `typescript`, `@types/*`
-- `tailwindcss@4` + `@tailwindcss/postcss`
-- `eslint`, `eslint-config-next`
-
-> All of these are listed in `frontend/package.json` and installed automatically by `npm install`. You do not need to install them one-by-one.
-
----
-
-## Available Scripts
-
-Run these from inside the `frontend/` folder:
-
-| Command | What it does |
-|---------|--------------|
-| `npm run dev` | Starts the dev server at `http://localhost:3000` with hot-reload |
-| `npm run build` | Builds the production bundle into `.next/` |
-| `npm start` | Runs the production build (run `build` first) |
-| `npm run lint` | Runs ESLint to check code quality |
-
----
-
-## Troubleshooting
-
-### `node: command not found`
-
-Node.js is not installed or is not on your PATH.
-
-Install from https://nodejs.org and restart your terminal.
-
-### `npm install` fails with permission errors (Linux / macOS)
-
-```bash
-# Fix npm permissions (recommended over sudo)
-mkdir -p ~/.npm-global
-npm config set prefix '~/.npm-global'
-echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.bashrc
-source ~/.bashrc
-```
-
-### `EACCES` on macOS
-
-Do not use `sudo` with npm. Instead, fix permissions as above, or use [nvm](https://github.com/nvm-sh/nvm).
-
-### `npm install` fails with peer dependency conflicts (`ERESOLVE`)
-
-If you hit `npm error ERESOLVE could not resolve` (commonly due to React 19 and older `@react-three` or `@react-spring` package peer requirements), run:
-
-```bash
 npm install --legacy-peer-deps
-```
-
-*Note: We have included an [.npmrc](file:///home/gytdrop/Documents/Desktop_Archive/BHAYYA/techazsure/3d%20print/frontend/.npmrc) file in the `frontend/` directory configured with `legacy-peer-deps=true` so that plain `npm install` works automatically.*
-
-### Port 3000 is already in use
-
-```bash
-# Either kill the process using port 3000
-npx kill-port 3000
-
-# Or run on a different port
-npm run dev -- -p 3001
-```
-
-### `Module not found` errors after pulling new changes
-
-Someone added a new dependency. Run:
-
-```bash
-npm install
-```
-
-### WebGL / 3D viewer shows a blank screen
-
-The 3D model viewer needs WebGL. Make sure:
-
-- You are using a modern browser (Chrome, Firefox, Edge, Safari 15+)
-- Hardware acceleration is enabled in your browser settings
-- Your GPU drivers are up to date
-
-### `sharp` or `cpu-features` warnings during install
-
-These are native modules used by Next.js for image optimization. They are listed in `package.json` under `allowScripts` — npm may prompt you to approve running their install scripts. **Type `y` to approve** — they are safe and needed.
-
-### Stale build cache
-
-If something looks broken after pulling, nuke the cache:
-
-```bash
-rm -rf .next
-rm -rf node_modules
-npm install
 npm run dev
 ```
+Storefront opens on `http://localhost:3000`.
 
 ---
 
-## Environment Variables (none required for now)
-
-This project does not need any `.env` file to run in development. If that is added later, you will create `frontend/.env.local` (already in `.gitignore`).
-
----
-
-## Project Structure
-
-```
-3d_print_ecommerce/
-|-- frontend/              The Next.js app (everything installs here)
-|   |-- app/               Pages (App Router)
-|   |-- components/        Reusable React components
-|   |-- config/            Site content and theme config
-|   |-- public/            Static assets (images, STL files)
-|   |-- store/             Zustand state stores
-|   `-- package.json       Dependencies and scripts
-|-- Agent.md               Project agent notes
-|-- hierarchy.md           Project hierarchy doc
-|-- install.md             You are here
-|-- README.md              Project overview
-`-- .gitignore
-```
-
----
-
-## Verify your install
-
-After `npm run dev` is running, you should see:
-
-1. The home page at `http://localhost:3000`
-2. An `/explore` page with sample 3D-printed products
-3. An `/upload` page with an STL uploader and 3D viewer
-4. No red errors in your terminal
-
-If all four check out — you are good to go.
-
----
-
-## Cross-platform one-liner (auto-detects your OS)
-
-If you do not want to pick a block from above, this single block works on **macOS, Linux, and Windows PowerShell**:
-
-### macOS / Linux / PowerShell
+## 3. Useful Docker Commands
 
 ```bash
-git clone https://github.com/gytdrop/3d_print_ecommerce.git && cd 3d_print_ecommerce/frontend && npm install && npm run dev
+# View live container logs
+docker compose logs -f backend
+docker compose logs -f proxy
+
+# Rebuild images after changing code
+docker compose --env-file .env.docker build
+
+# Stop all containers
+docker compose --env-file .env.docker down
+
+# Stop all containers and wipe database volume (clean reset)
+docker compose --env-file .env.docker down -v
 ```
-
-### What this does, step by step
-
-| Step | Command | What happens |
-|------|---------|--------------|
-| 1 | `git clone <url>` | Downloads the repo into a new folder |
-| 2 | `cd 3d_print_ecommerce/frontend` | Moves into the Next.js app folder |
-| 3 | `npm install` | Reads `package.json` and installs every dependency |
-| 4 | `npm run dev` | Starts the dev server at `http://localhost:3000` |
-
-### OS-specific notes
-
-- **macOS / Linux**: paste straight into **Terminal**. The `&&` chains commands — if any step fails, the rest stop.
-- **Windows PowerShell**: paste straight in. PowerShell also supports `&&` (since Windows 10 1809+). If yours is older, use the [PowerShell block](#one-shot-install-copy-and-paste) above.
-- **Windows CMD (`cmd.exe`)**: `&&` is NOT supported there — use the [Command Prompt block](#one-shot-install-copy-and-paste) above, or open PowerShell instead.
-- **Git Bash on Windows**: behaves like Linux — the macOS/Linux block works.
-
-### Even safer version (checks Node first)
-
-If you want to fail fast with a clear message when Node is not installed:
-
-```bash
-# macOS / Linux
-command -v node >/dev/null 2>&1 || { echo "Node.js not found. Install from https://nodejs.org"; exit 1; }
-git clone https://github.com/gytdrop/3d_print_ecommerce.git && \
-cd 3d_print_ecommerce/frontend && \
-npm install && \
-npm run dev
-```
-
-```powershell
-# Windows PowerShell
-if (-not (Get-Command node -ErrorAction SilentlyContinue)) { Write-Host "Node.js not found. Install from https://nodejs.org" -ForegroundColor Red; exit 1 }
-git clone https://github.com/gytdrop/3d_print_ecommerce.git; cd 3d_print_ecommerce/frontend; npm install; npm run dev
-```
-
----
-
-## Need help?
-
-Open an issue on the repo: https://github.com/gytdrop/3d_print_ecommerce/issues

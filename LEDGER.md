@@ -1,0 +1,120 @@
+# TechAZsure 3D Print — Ledger & Architecture Resume
+
+**Document Purpose**: Definitive technical ledger, system resume, and state record. Designed for onboarding human engineers and AI coding agents to instantly grasp the product vision, tech stack, genre, visual design system, active container state, and remaining roadmap.
+
+---
+
+## 1. Executive Summary & Purpose
+
+* **Platform Name**: TechAZsure 3D Print
+* **Website Genre**: Hardware Showcase + Custom On-Demand 3D Manufacturing E-Commerce Platform with Hyperlocal Express Dispatch.
+* **Core Value Proposition**: 
+  1. High-fidelity hardware showcase introducing TechAZsure's optical additive manufacturing capabilities.
+  2. Instant 3D STL & photo lithophane quoting engine calculating material density, volume, and machine runtimes.
+  3. Curated e-commerce catalog across 7 categories.
+  4. Hyperlocal dispatch in under 8 hours across Bengaluru metropolitan postal zones.
+  5. Real-time 5-stage dispatch telemetry and order status tracking.
+
+---
+
+## 2. Technical Stack Matrix
+
+| Subsystem | Technologies & Frameworks | Description & Rationale |
+|---|---|---|
+| **Frontend Storefront** | Next.js 16.2.9 (App Router), React 19.2.4, TypeScript 5, Tailwind CSS 4 | Production-grade server/client architecture with static prerendering and Turbopack support. Built in `standalone` output mode for Docker. |
+| **3D Engine & Graphics** | Three.js `0.168.0`, `@react-three/fiber` `8.17.10`, `@react-three/drei` `9.122.0` | In-browser WebGL canvas rendering for STL files, interactive mesh controls, and fallback 3D canvases. |
+| **State Management** | Zustand 5.0.14 | Clean, boilerplate-free state store (`useOrderStore.ts`) managing 3D file metadata, custom dimensions, selected materials, and cart state. |
+| **Backend Microservice** | Go 1.24 (`net/http`, `Jackc/pgx/v5`) | Sub-millisecond REST API handling volumetric density calculations, rush expedite multipliers, database persistence, and order tracking. |
+| **Relational Database** | PostgreSQL 16 Alpine (`pgcrypto`) | Relational datastore containing 10 relational tables for pincodes, categories, products, product variants, materials, customers, orders, order timeline, and payments. |
+| **Security SaaS & Reverse Proxy** | Nginx Alpine (Custom Gateway) | Reverse proxy terminating Port 80, enforcing rate limits (`15 req/s, burst 20`), security headers (CSP, HSTS, X-Frame-Options), and 50MB file upload limits. |
+| **Orchestration** | Docker Compose v2.x | Multi-container microservice topology with dedicated internal bridge networks (`frontend-net`, `backend-net`). |
+
+---
+
+## 3. Genre & Design System ("Theme")
+
+### Genre
+**Cyber-Physical Hardware / Industrial Precision E-Commerce**
+Combines the interactive showcase feel of [`antigravity.google`](https://antigravity.google/) with high-conversion consumer product configuration.
+
+### Visual Design Theme & Language
+* **Design Philosophy**: Strict adherence to `/no-slop-ui` — no generic neon gradients, no random floating blobs, no illegible low-contrast text.
+* **Color Palette**:
+  - **Base Background**: Deep Industrial Space `#050608`
+  - **Glass Containers**: Engineering frosted glass `bg-[#0b0f19]/90 backdrop-blur-xl border border-white/15 ring-1 ring-white/10`
+  - **Primary Accent**: Energetic Forge Orange (`#ff5722` / `from-orange-500 to-amber-500`)
+  - **Secondary Accents**: Cyber Cyan (`#22d3ee`) for technical metrics and precision badges
+  - **Text Colors**: High-contrast primary `#f8fafc`, muted specs `#94a3b8`
+* **Typography**:
+  - Headings: Clean sans-serif / Space Grotesk
+  - Data Badges & Machine Specs: Monospace (`font-mono`)
+* **Showcase Scrollytelling Mechanics**:
+  - **Zero Vertical Page Displacement**: Fixed viewport pinning (`fixed inset-0 w-screen h-screen overflow-hidden`) locks the outer window. Content containers fade in and out in place without scrolling off screen.
+  - **Hardware Frame Scrubbing**: Video frame seeking synchronized directly to scroll delta against All-Intra encoded mechanical assembly footage (`cube_assembly_intra_fast.mp4`).
+
+---
+
+## 4. Current State Ledger: "Where We Stopped"
+
+### ✅ Completed & Active Systems
+
+1. **Database Schema & Embedded Seeds**:
+   - PostgreSQL schema with tables: `pincodes`, `categories`, `products`, `product_variants`, `materials`, `customers`, `orders`, `order_timeline`, `payments`.
+   - Automated triggers for `updated_at`.
+   - Embedded migrations in Go (`//go:embed`) applying schema DDL and seeds automatically on container boot.
+2. **REST API Handlers**:
+   - `GET /api/health`: Health probe with live DB ping.
+   - `GET /api/pincodes/check?pincode=...`: Real-time tier and express validation.
+   - `GET /api/products`: Catalog query from PostgreSQL.
+   - `GET /api/materials`: Physical density (g/cm³) and pricing specs.
+   - `POST /api/quote`: Dynamic volume and expedite pricing formula engine.
+   - `POST /api/orders`: Order placement generating initial `order_placed` timeline checkpoint.
+   - `GET /api/orders/track?id=...`: Real-time timeline telemetry lookup.
+3. **Frontend Storefront**:
+   - Homepage (`/`): In-place 6-stage 3D video scrub showcase with timeline scrub pills.
+   - Explore (`/explore`): Curated product catalog with Schema.org `ItemList` and `Product` JSON-LD.
+   - Upload (`/upload`): STL/photo upload flow with Three.js preview and dynamic pricing summary.
+   - Track (`/track`): Real-time 5-stage dispatch telemetry portal.
+   - Zones (`/zones`): Bengaluru delivery zone checker.
+   - Layout (`layout.tsx`): Enterprise `LocalBusiness` Schema.org JSON-LD structured data.
+4. **Security SaaS & Docker Containerization**:
+   - All 4 containers running and healthy: `techazsure-proxy`, `techazsure-frontend`, `techazsure-backend`, `techazsure-db`.
+   - Nginx reverse proxy serving Port 80 with CSP, HSTS, X-Frame-Options, and rate limiting.
+   - Zero hardcoded `localhost:8080` in frontend client code.
+
+---
+
+## 5. Remaining Roadmap: "How Much is Remaining"
+
+### Phase 2: Production Hardening & Payment Gateways (Remaining)
+- [ ] **Payment Gateway Integration**:
+  - Connect Razorpay / Cashfree webhook handlers in Go (`POST /api/payments/webhook`) to update `payments` and transition order status to `sliced`.
+  - Add client-side checkout modal in `PriceSummary.tsx`.
+- [ ] **Cloud Storage S3/GCS Integration**:
+  - Replace local file mock paths (`/uploads/...`) with signed presigned URL generation for uploaded user STL files in AWS S3 or Google Cloud Storage.
+- [ ] **Admin Dispatch Dashboard**:
+  - Create `/admin/dispatch` interface allowing operations team to update order timeline stages (`sliced` → `in_print` → `qc_passed` → `out_for_delivery`).
+- [ ] **SSL / TLS Certificate Provisioning**:
+  - Configure Let's Encrypt / Certbot in `techazsure-proxy` for HTTPS on Port 443 with automated renewal.
+- [ ] **Automated CI/CD Pipeline**:
+  - GitHub Actions workflow for building Docker images and running Go unit/integration tests on push.
+
+---
+
+## 6. How to Run & Verify
+
+```bash
+# 1. Start all containers in the background
+docker compose --env-file .env.docker up -d
+
+# 2. Inspect container status
+docker ps
+
+# 3. Test Health & Database Connection
+curl -i http://localhost/api/health
+
+# 4. View in Browser
+# Storefront: http://localhost/
+# Catalog:    http://localhost/explore
+# Tracking:   http://localhost/track?id=a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+```

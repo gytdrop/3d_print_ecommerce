@@ -8,6 +8,7 @@ import { siteContent } from '@/config/siteContent';
 const navLinks = [
   { label: 'Delivery Zones', href: '/zones' },
   { label: 'Explore', href: '/explore' },
+  { label: 'Track Order', href: '/track' },
   { label: 'About', href: '/about' },
 ];
 

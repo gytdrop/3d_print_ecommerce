@@ -4,12 +4,13 @@
 .env
 .env.*
 !.env.example
+!.env.docker
 *.pem
 *.key
 secrets.json
 
 # ─────────────────────────────────────────────────────────────
-# Dependencies — regenerable from package-lock.json / yarn.lock
+# Dependencies — regenerable from package-lock.json / go.sum
 # ─────────────────────────────────────────────────────────────
 node_modules/
 .pnp
@@ -21,7 +22,7 @@ node_modules/
 !.yarn/versions
 
 # ─────────────────────────────────────────────────────────────
-# Build output — regenerable
+# Build output & Binaries — regenerable
 # ─────────────────────────────────────────────────────────────
 .next/
 out/
@@ -29,9 +30,11 @@ build/
 dist/
 *.tsbuildinfo
 next-env.d.ts
+backend/server
+server
 
 # ─────────────────────────────────────────────────────────────
-# Logs
+# Logs & System Cache
 # ─────────────────────────────────────────────────────────────
 npm-debug.log*
 yarn-debug.log*
@@ -41,7 +44,7 @@ logs/
 *.log
 
 # ─────────────────────────────────────────────────────────────
-# OS junk
+# OS Junk
 # ─────────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
@@ -49,7 +52,7 @@ desktop.ini
 $RECYCLE.BIN/
 
 # ─────────────────────────────────────────────────────────────
-# Editors & AI tools
+# Editors & AI Tools
 # ─────────────────────────────────────────────────────────────
 .aider*
 .aider.chat.history.md
@@ -62,22 +65,19 @@ $RECYCLE.BIN/
 *~
 
 # ─────────────────────────────────────────────────────────────
-# Test / scratch artifacts (root-level — not part of the app)
+# Test / scratch artifacts
 # ─────────────────────────────────────────────────────────────
 /apple.stl
 /test.stl
 /gen_apple.py
+eg.html
 
 # ─────────────────────────────────────────────────────────────
-# Coverage / cache
+# Coverage & Cache
 # ─────────────────────────────────────────────────────────────
 coverage/
 .nyc_output/
 .cache/
 .parcel-cache/
 .turbo/
-
-# ─────────────────────────────────────────────────────────────
-# Vercel
-# ─────────────────────────────────────────────────────────────
 .vercel

@@ -223,6 +223,33 @@ export default function ExplorePage() {
 
   return (
     <div className="min-h-0 md:min-h-[92vh] py-6 md:py-16 px-4 relative w-full overflow-x-hidden">
+      {/* Schema.org ItemList JSON-LD */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": "TechAZsure 3D Printed Products",
+            "itemListElement": products.map((prod, idx) => ({
+              "@type": "ListItem",
+              "position": idx + 1,
+              "item": {
+                "@type": "Product",
+                "name": prod.name,
+                "description": prod.description,
+                "image": `https://techazsure.com${prod.image}`,
+                "offers": {
+                  "@type": "Offer",
+                  "priceCurrency": "INR",
+                  "price": prod.price.replace('₹', '').replace(',', ''),
+                  "availability": "https://schema.org/InStock"
+                }
+              }
+            }))
+          })
+        }}
+      />
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
