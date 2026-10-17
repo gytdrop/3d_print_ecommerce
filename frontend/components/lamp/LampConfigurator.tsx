@@ -13,6 +13,20 @@ import {
   type LampSizeId, type LampOrientation, type LampBoxColor, type LampDeliveryTier,
 } from './lampConfig';
 
+interface ShipEstimate {
+  days_min: number;
+  days_max: number;
+  eta_from: string;
+  eta_to: string;
+  message: string;
+}
+
+interface ServerLampConfig {
+  lamp_prices: Record<string, number>;
+  eco_discount: number;
+  rush_surcharge_rate: number;
+}
+
 const LampPreview3D = dynamic(() => import('./LampPreview3D'), { ssr: false });
 
 interface PhotoState {
@@ -58,6 +72,8 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
   const [tier, setTier] = useState<LampDeliveryTier>('standard-2d');
   const [pincode, setPincode] = useState('');
   const [pin, setPin] = useState<PinState>({ checked: false, eligible: false, message: '' });
+  const [shipEstimate, setShipEstimate] = useState<ShipEstimate | null>(null);
+  const [serverCfg, setServerCfg] = useState<ServerLampConfig | null>(null);
   const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -72,7 +88,30 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const aspect = panelAspect(size, orientation);
-  const price = estimateLampPrice(size, tier);
+
+  // Price display uses live admin-configured values when available; the final
+  // authoritative price always comes from the server at order time.
+  const price = useMemo(() => {
+    if (!serverCfg) return estimateLampPrice(size, tier);
+    const base = serverCfg.lamp_prices[size] ?? LAMP_SIZES[size].price;
+    const rushSurcharge =
+      tier === 'express-8h' ? Math.round(base * serverCfg.rush_surcharge_rate * 100) / 100 : 0;
+    const discount = tier === 'budget-5-7d' ? serverCfg.eco_discount : 0;
+    return {
+      base,
+      rushSurcharge,
+      discount,
+      final: Math.max(0, Math.round((base + rushSurcharge - discount) * 100) / 100),
+    };
+  }, [serverCfg, size, tier]);
+
+  // Live pricing configuration (admin dashboard values).
+  useEffect(() => {
+    fetch('/api/lamp/config')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => data && setServerCfg(data))
+      .catch(() => {}); // constants remain the fallback
+  }, []);
 
   // ── Crop window math (source-pixel space) ──────────────────────────────────
   const cropWindow = useMemo(() => {
@@ -169,11 +208,12 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
     setDragging(false);
   };
 
-  // ── Pincode check ──────────────────────────────────────────────────────────
+  // ── Pincode check + shipping estimate ──────────────────────────────────────
   const checkPincode = async (value: string) => {
     setPincode(value);
     if (!/^\d{6}$/.test(value)) {
       setPin({ checked: false, eligible: false, message: '' });
+      setShipEstimate(null);
       return;
     }
     try {
@@ -183,6 +223,13 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
       if (!data.eligible && tier === 'express-8h') setTier('standard-2d');
     } catch {
       setPin({ checked: true, eligible: false, message: 'Could not verify pincode — standard delivery assumed.' });
+    }
+    // Delivery window estimated against the manufacturing origin pincode.
+    try {
+      const res = await fetch(`/api/shipping/estimate?pincode=${value}`);
+      setShipEstimate(res.ok ? await res.json() : null);
+    } catch {
+      setShipEstimate(null);
     }
   };
 
@@ -451,7 +498,7 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
                     {cfg.panelWcm}×{cfg.panelHcm} cm
                   </span>
                   <span className="block text-sm font-semibold text-[var(--text-on-page)] mt-1">
-                    ₹{cfg.price}
+                    ₹{serverCfg?.lamp_prices[id] ?? cfg.price}
                   </span>
                 </button>
               );
@@ -519,6 +566,16 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
           {pin.checked && (
             <p className={`text-xs mb-3 ${pin.eligible ? 'text-emerald-500' : 'text-[var(--text-muted)]'}`}>
               {pin.message}
+            </p>
+          )}
+          {shipEstimate && (
+            <p className="text-xs mb-3 text-[var(--text-on-card)] bg-[var(--bg-card)] border border-[var(--border-subtle)] rounded-lg px-3 py-2">
+              📦 {shipEstimate.message}{' '}
+              <span className="text-[var(--text-muted)]">
+                ({shipEstimate.eta_from === shipEstimate.eta_to
+                  ? shipEstimate.eta_from
+                  : `${shipEstimate.eta_from} → ${shipEstimate.eta_to}`})
+              </span>
             </p>
           )}
           <div className="flex flex-col gap-2">

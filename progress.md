@@ -85,3 +85,10 @@ Last updated: 2026-10-17
   - Entry points: homepage Stage 05 size CTAs → `/lamp?size=…`; featured `/explore` card → `/lamp`.
   - Verified: Go unit tests pass, `npm run build` clean, end-to-end order flow tested against a live PostgreSQL instance (photo upload → ₹699 eco order → 35MB STL generated + timeline event; express/eco pricing and legacy STL orders confirmed intact).
   - Still open before first production print: LED module measurements (box depth/rails) and panel thickness glow validation (spec Open Questions 1–2).
+
+### Phase 4: Admin Ops Dashboard & Configurable Platform
+- [x] **M15: Isolated Admin Dashboard + DB-backed settings + shipping estimator** (2026-10-17):
+  - Moved hardcoded pricing/shipping values into an admin-editable `settings` table (lamp prices, eco discount, rush rate, machine rate, bulk rules, manufacturing origin pincode/address) with a 15s read cache in the public API.
+  - Pincode-proximity shipping estimator (`internal/shipping`): compares customer pincode to the manufacturing origin via prefix depth (district/region/zone/national), admin-tunable day bands, per-pincode overrides (exact day window or fixed delivery date). Public endpoint `GET /api/shipping/estimate`; ETA shown live on `/lamp`.
+  - Separate admin server (`cmd/admin` → `techazsure-admin` container) bound to `127.0.0.1:9090` only — never behind the public proxy; `ADMIN_TOKEN` bearer auth. Embedded dashboard: settings editor, shipping band matrix, pincode manager with overrides, estimator test tool, and dispatch stage control (closes the Phase 2 admin dashboard roadmap item).
+  - Verified end-to-end: admin price/origin edits propagate to public quotes and estimates, fixed-date override honored, stage transition visible on public `/track`, unauthorized requests rejected.

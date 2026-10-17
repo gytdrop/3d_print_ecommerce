@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>TechAZsure Ops — Admin Dashboard</title>
+<style>
+  :root {
+    --bg: #050608; --card: rgba(11,15,25,.92); --border: rgba(255,255,255,.14);
+    --text: #f8fafc; --muted: #94a3b8; --accent: #ff5722; --cyan: #22d3ee;
+    --ok: #34d399; --warn: #fbbf24; --err: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--bg); color: var(--text); font: 14px/1.5 system-ui, sans-serif; padding: 24px; }
+  .mono { font-family: ui-monospace, Menlo, monospace; }
+  h1 { font-size: 20px; letter-spacing: .02em; }
+  h1 span { color: var(--accent); }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 14px; }
+  .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+  .wrap { max-width: 1180px; margin: 0 auto; display: grid; gap: 18px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
+          backdrop-filter: blur(12px); box-shadow: 0 18px 44px rgba(0,0,0,.7); }
+  label { display: block; font-size: 11px; color: var(--muted); margin: 10px 0 4px; text-transform: uppercase; letter-spacing: .05em; }
+  input, select { width: 100%; background: #0a0e18; color: var(--text); border: 1px solid var(--border);
+          border-radius: 8px; padding: 8px 10px; font-size: 13px; outline: none; }
+  input:focus, select:focus { border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+  button { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px;
+          font-size: 13px; font-weight: 600; cursor: pointer; }
+  button:hover { filter: brightness(1.1); }
+  button.ghost { background: rgba(255,255,255,.08); border: 1px solid var(--border); font-weight: 500; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { text-align: left; color: var(--muted); font-weight: 500; padding: 6px 8px; border-bottom: 1px solid var(--border);
+       text-transform: uppercase; font-size: 10px; letter-spacing: .05em; }
+  td { padding: 7px 8px; border-bottom: 1px solid rgba(255,255,255,.06); vertical-align: middle; }
+  .tag { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 10px; border: 1px solid var(--border); }
+  .tag.express { color: var(--cyan); border-color: rgba(34,211,238,.4); }
+  .tag.override { color: var(--warn); border-color: rgba(251,191,36,.4); }
+  .tag.ok { color: var(--ok); border-color: rgba(52,211,153,.4); }
+  .tag.err { color: var(--err); border-color: rgba(248,113,113,.4); }
+  #toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 16px; border-radius: 10px;
+          background: #101624; border: 1px solid var(--border); font-size: 13px; display: none; z-index: 50; }
+  .estimate-box { background: #0a0e18; border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-top: 10px; font-size: 13px; }
+  .scroll { max-height: 420px; overflow-y: auto; }
+  .topbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .lock { display: flex; gap: 8px; align-items: center; }
+  .lock input { width: 280px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="card topbar">
+    <div>
+      <h1>TechAZsure <span>Ops Dashboard</span></h1>
+      <p class="sub">Isolated admin service — not routed through the public site. Access via SSH tunnel: <span class="mono">ssh -L 9090:127.0.0.1:9090 user@vps</span></p>
+    </div>
+    <div class="lock">
+      <input id="token" type="password" placeholder="ADMIN_TOKEN" autocomplete="off">
+      <button onclick="connect()">Connect</button>
+    </div>
+  </div>
+
+  <div id="app" style="display:none; display:none;">
+  <div class="grid2">
+
+    <!-- Manufacturing origin + pricing -->
+    <div class="card">
+      <h2>Manufacturing Origin &amp; Pricing</h2>
+      <label>Origin pincode (shipping estimates compare against this)</label>
+      <input id="c_origin_pincode" class="mono" maxlength="6">
+      <label>Origin address</label>
+      <input id="c_origin_address">
+      <label>Photo Lamp prices (₹)</label>
+      <div class="row">
+        <div><label>Small</label><input id="c_lamp_small" type="number" min="1"></div>
+        <div><label>Medium</label><input id="c_lamp_medium" type="number" min="1"></div>
+        <div><label>Large</label><input id="c_lamp_large" type="number" min="1"></div>
+      </div>
+      <div class="row">
+        <div><label>Eco discount ₹</label><input id="c_eco" type="number" min="0"></div>
+        <div><label>Rush rate (0.833 = +83.3%)</label><input id="c_rush" type="number" step="0.001" min="0"></div>
+        <div><label>Machine ₹/cm³</label><input id="c_machine" type="number" step="0.1" min="0"></div>
+      </div>
+      <div class="row">
+        <div><label>Bulk vol ≥ cm³</label><input id="c_bulkvol" type="number" min="0"></div>
+        <div><label>Bulk price ≥ ₹</label><input id="c_bulkprice" type="number" min="0"></div>
+        <div><label>Bulk disc. (0.10 = 10%)</label><input id="c_bulkpct" type="number" step="0.01" min="0" max="0.99"></div>
+      </div>
+    </div>
+
+    <!-- Shipping bands + estimator -->
+    <div class="card">
+      <h2>Shipping Bands (days, by pincode proximity to origin)</h2>
+      <table>
+        <tr><th>Match level</th><th>Min days</th><th>Max days</th></tr>
+        <tr><td>Same pincode</td><td><input id="s_same_pincode_min" type="number" min="0"></td><td><input id="s_same_pincode_max" type="number" min="0"></td></tr>
+        <tr><td>Same district <span class="sub mono">(first 3 digits)</span></td><td><input id="s_same_district_min" type="number" min="0"></td><td><input id="s_same_district_max" type="number" min="0"></td></tr>
+        <tr><td>Same region <span class="sub mono">(first 2)</span></td><td><input id="s_same_region_min" type="number" min="0"></td><td><input id="s_same_region_max" type="number" min="0"></td></tr>
+        <tr><td>Same zone <span class="sub mono">(first 1)</span></td><td><input id="s_same_zone_min" type="number" min="0"></td><td><input id="s_same_zone_max" type="number" min="0"></td></tr>
+        <tr><td>National</td><td><input id="s_national_min" type="number" min="0"></td><td><input id="s_national_max" type="number" min="0"></td></tr>
+      </table>
+      <div style="margin-top:14px; display:flex; gap:10px;">
+        <button onclick="saveConfig()">Save All Settings</button>
+        <button class="ghost" onclick="loadConfig()">Reload</button>
+      </div>
+      <h2 style="margin-top:20px;">Estimator Test</h2>
+      <div style="display:flex; gap:8px;">
+        <input id="est_pincode" class="mono" maxlength="6" placeholder="Customer pincode e.g. 110001">
+        <button class="ghost" onclick="testEstimate()">Estimate</button>
+      </div>
+      <div id="est_result" class="estimate-box" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Pincode overrides -->
+  <div class="card">
+    <h2>Pincodes &amp; Delivery Overrides</h2>
+    <div class="row" style="grid-template-columns: 1.2fr 1fr 1fr 1.6fr .8fr .8fr 1.1fr auto;">
+      <div><label>Pincode</label><input id="p_code" class="mono" maxlength="6"></div>
+      <div><label>Tier</label><select id="p_tier"><option>standard</option><option>express</option><option>campus</option></select></div>
+      <div><label>Express?</label><select id="p_express"><option value="false">no</option><option value="true">yes</option></select></div>
+      <div><label>Message</label><input id="p_msg" placeholder="shown to customer"></div>
+      <div><label>Days min</label><input id="p_dmin" type="number" min="-1" value="-1"></div>
+      <div><label>Days max</label><input id="p_dmax" type="number" min="-1" value="-1"></div>
+      <div><label>Fixed date</label><input id="p_date" type="date"></div>
+      <div><label>&nbsp;</label><button onclick="savePincode()">Save</button></div>
+    </div>
+    <p class="sub">Days −1 = no override (algorithm decides). A fixed date wins over day overrides.</p>
+    <div style="display:flex; gap:8px; margin:12px 0;">
+      <input id="p_search" class="mono" placeholder="Filter by prefix…" style="max-width:220px;" oninput="loadPincodes()">
+    </div>
+    <div class="scroll">
+      <table id="pincode_table">
+        <thead><tr><th>Pincode</th><th>Tier</th><th>Express</th><th>Override</th><th>Message</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Orders -->
+  <div class="card">
+    <h2>Recent Orders — Dispatch Control</h2>
+    <div class="scroll">
+      <table id="orders_table">
+        <thead><tr><th>Created</th><th>Order</th><th>Type</th><th>Tier</th><th>Pin</th><th>₹</th><th>STL</th><th>Status</th><th>Advance</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  </div><!-- /app -->
+</div>
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+let TOKEN = sessionStorage.getItem('admintoken') || '';
+const $ = (id) => document.getElementById(id);
+const STAGES = ['sliced','in_print','qc_passed','out_for_delivery','delivered'];
+
+function toast(msg, bad) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.style.borderColor = bad ? 'var(--err)' : 'var(--ok)';
+  t.style.display = 'block';
+  clearTimeout(t._h); t._h = setTimeout(() => t.style.display = 'none', 3500);
+}
+
+async function api(path, opts = {}) {
+  opts.headers = Object.assign({ 'Authorization': 'Bearer ' + TOKEN }, opts.headers || {});
+  if (opts.body && typeof opts.body !== 'string') {
+    opts.body = JSON.stringify(opts.body);
+    opts.headers['Content-Type'] = 'application/json';
+  }
+  const res = await fetch(path, opts);
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) { throw new Error('Unauthorized — check the admin token'); }
+  if (!res.ok) { throw new Error(data.error || ('HTTP ' + res.status)); }
+  return data;
+}
+
+async function connect() {
+  TOKEN = $('token').value.trim() || TOKEN;
+  try {
+    await api('/admin/api/config');
+    sessionStorage.setItem('admintoken', TOKEN);
+    $('app').style.display = 'block';
+    toast('Connected');
+    await Promise.all([loadConfig(), loadPincodes(), loadOrders()]);
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ── Config ── */
+const BANDS = ['same_pincode','same_district','same_region','same_zone','national'];
+
+async function loadConfig() {
+  const c = await api('/admin/api/config');
+  $('c_origin_pincode').value = c.origin_pincode;
+  $('c_origin_address').value = c.origin_address;
+  $('c_lamp_small').value  = c.lamp_prices.small;
+  $('c_lamp_medium').value = c.lamp_prices.medium;
+  $('c_lamp_large').value  = c.lamp_prices.large;
+  $('c_eco').value = c.eco_discount;
+  $('c_rush').value = c.rush_surcharge_rate;
+  $('c_machine').value = c.machine_rate_per_cm3;
+  $('c_bulkvol').value = c.bulk_volume_threshold;
+  $('c_bulkprice').value = c.bulk_price_threshold;
+  $('c_bulkpct').value = c.bulk_discount_pct;
+  for (const b of BANDS) {
+    $('s_' + b + '_min').value = c.shipping[b].min_days;
+    $('s_' + b + '_max').value = c.shipping[b].max_days;
+  }
+}
+
+async function saveConfig() {
+  const shipping = {};
+  for (const b of BANDS) {
+    shipping[b] = { min_days: +$('s_' + b + '_min').value, max_days: +$('s_' + b + '_max').value };
+  }
+  const cfg = {
+    origin_pincode: $('c_origin_pincode').value.trim(),
+    origin_address: $('c_origin_address').value.trim(),
+    lamp_prices: { small: +$('c_lamp_small').value, medium: +$('c_lamp_medium').value, large: +$('c_lamp_large').value },
+    eco_discount: +$('c_eco').value,
+    rush_surcharge_rate: +$('c_rush').value,
+    machine_rate_per_cm3: +$('c_machine').value,
+    bulk_volume_threshold: +$('c_bulkvol').value,
+    bulk_price_threshold: +$('c_bulkprice').value,
+    bulk_discount_pct: +$('c_bulkpct').value,
+    shipping,
+  };
+  try {
+    await api('/admin/api/config', { method: 'PUT', body: cfg });
+    toast('Settings saved — live on the site within ~15s');
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ── Estimator test ── */
+async function testEstimate() {
+  try {
+    const e = await api('/admin/api/estimate?pincode=' + $('est_pincode').value.trim());
+    const box = $('est_result');
+    box.style.display = 'block';
+    box.innerHTML =
+      '<b>' + e.pincode + '</b> vs origin <b>' + e.origin_pincode + '</b> → ' +
+      '<span class="tag">' + e.match_level + '</span><br>' +
+      e.message + '<br><span class="sub mono">ETA ' + e.eta_from + ' → ' + e.eta_to + '</span>';
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ── Pincodes ── */
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, (c) =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function loadPincodes() {
+  const list = await api('/admin/api/pincodes?q=' + encodeURIComponent($('p_search').value.trim()));
+  const tb = $('pincode_table').querySelector('tbody');
+  tb.innerHTML = '';
+  for (const p of list) {
+    let ov = '—';
+    if (p.override_delivery_date) ov = '<span class="tag override">date ' + esc(p.override_delivery_date) + '</span>';
+    else if (p.override_days_min >= 0) ov = '<span class="tag override">' + p.override_days_min + '–' + p.override_days_max + 'd</span>';
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="mono">' + esc(p.pincode) + '</td>' +
+      '<td><span class="tag ' + (p.tier === 'express' ? 'express' : '') + '">' + esc(p.tier) + '</span></td>' +
+      '<td>' + (p.is_eligible_express ? 'yes' : 'no') + '</td>' +
+      '<td>' + ov + '</td>' +
+      '<td class="sub">' + esc(p.message) + '</td>' +
+      '<td><button class="ghost" style="padding:3px 10px;font-size:11px;">edit</button></td>';
+    tr.querySelector('button').onclick = () => {
+      $('p_code').value = p.pincode; $('p_tier').value = p.tier;
+      $('p_express').value = String(p.is_eligible_express); $('p_msg').value = p.message;
+      $('p_dmin').value = p.override_days_min; $('p_dmax').value = p.override_days_max;
+      $('p_date').value = p.override_delivery_date || '';
+      window.scrollTo({ top: $('p_code').getBoundingClientRect().top + window.scrollY - 120, behavior: 'smooth' });
+    };
+    tb.appendChild(tr);
+  }
+}
+
+async function savePincode() {
+  const body = {
+    pincode: $('p_code').value.trim(),
+    tier: $('p_tier').value,
+    is_eligible_express: $('p_express').value === 'true',
+    message: $('p_msg').value,
+    override_days_min: +$('p_dmin').value,
+    override_days_max: +$('p_dmax').value,
+    override_delivery_date: $('p_date').value || null,
+  };
+  try {
+    await api('/admin/api/pincodes', { method: 'PUT', body });
+    toast('Pincode ' + body.pincode + ' saved');
+    loadPincodes();
+  } catch (e) { toast(e.message, true); }
+}
+
+/* ── Orders ── */
+async function loadOrders() {
+  const list = await api('/admin/api/orders');
+  const tb = $('orders_table').querySelector('tbody');
+  tb.innerHTML = '';
+  for (const o of list) {
+    const tr = document.createElement('tr');
+    const sel = document.createElement('select');
+    sel.innerHTML = '<option value="">advance to…</option>' +
+      STAGES.map((s) => '<option>' + s + '</option>').join('');
+    const stl = o.product_type === 'photo_lamp'
+      ? '<span class="tag ' + (o.stl_generation_status === 'generated' ? 'ok' : o.stl_generation_status === 'failed' ? 'err' : '') + '">' + esc(o.stl_generation_status || '–') + '</span>'
+      : '—';
+    tr.innerHTML =
+      '<td class="sub mono">' + esc(o.created_at) + '</td>' +
+      '<td class="mono" title="' + esc(o.id) + '">' + esc(o.id.slice(0, 8)) + '… ' + esc(o.file_name) + '</td>' +
+      '<td>' + esc(o.product_type) + (o.lamp_size ? ' <span class="sub">(' + esc(o.lamp_size) + ')</span>' : '') + '</td>' +
+      '<td class="sub">' + esc(o.delivery_tier) + '</td>' +
+      '<td class="mono sub">' + esc(o.pincode) + '</td>' +
+      '<td>₹' + o.final_price + '</td>' +
+      '<td>' + stl + '</td>' +
+      '<td><span class="tag">' + esc(o.status) + '</span></td>';
+    const td = document.createElement('td');
+    td.appendChild(sel);
+    tr.appendChild(td);
+    sel.onchange = async () => {
+      if (!sel.value) return;
+      try {
+        await api('/admin/api/orders/' + o.id + '/stage', { method: 'POST', body: { stage: sel.value } });
+        toast('Order ' + o.id.slice(0, 8) + '… → ' + sel.value);
+        loadOrders();
+      } catch (e) { toast(e.message, true); }
+    };
+    tb.appendChild(tr);
+  }
+}
+
+if (TOKEN) { $('token').value = TOKEN; connect(); }
+</script>
+</body>
+</html>

@@ -152,6 +152,19 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS stl_generation_status VARCHAR(20);
 
 CREATE INDEX IF NOT EXISTS idx_orders_product_type ON orders(product_type);
 
+-- 11. Platform Settings (admin-editable pricing & shipping configuration)
+CREATE TABLE IF NOT EXISTS settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 12. Per-pincode shipping overrides (admin dashboard). A negative day value
+-- means "no override"; override_delivery_date pins a fixed calendar date.
+ALTER TABLE pincodes ADD COLUMN IF NOT EXISTS override_days_min INT DEFAULT -1;
+ALTER TABLE pincodes ADD COLUMN IF NOT EXISTS override_days_max INT DEFAULT -1;
+ALTER TABLE pincodes ADD COLUMN IF NOT EXISTS override_delivery_date DATE;
+
 -- Trigger for auto-updating updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

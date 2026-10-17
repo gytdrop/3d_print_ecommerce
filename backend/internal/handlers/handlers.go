@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"techazsure-3dprint/backend/internal/config"
 	"techazsure-3dprint/backend/internal/db"
 	"techazsure-3dprint/backend/internal/service"
 )
@@ -130,7 +131,7 @@ func HandleQuote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := service.CalculateQuote(req.VolumeCm3, req.MaterialType, req.DeliveryTier)
+	res, err := service.CalculateQuoteCfg(config.Get(r.Context()), req.VolumeCm3, req.MaterialType, req.DeliveryTier)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -342,12 +343,13 @@ func HandleOrders(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Calculate prices: flat matrix for photo lamps, volumetric engine for STL.
+	cfg := config.Get(r.Context())
 	var prices service.QuoteResponse
 	var err error
 	if isPhotoLamp {
-		prices, err = service.CalculateLampQuote(req.LampSize, req.DeliveryTier)
+		prices, err = service.CalculateLampQuoteCfg(cfg, req.LampSize, req.DeliveryTier)
 	} else {
-		prices, err = service.CalculateQuote(req.VolumeCm3, req.MaterialType, req.DeliveryTier)
+		prices, err = service.CalculateQuoteCfg(cfg, req.VolumeCm3, req.MaterialType, req.DeliveryTier)
 	}
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")

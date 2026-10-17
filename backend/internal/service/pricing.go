@@ -3,6 +3,8 @@ package service
 import (
 	"errors"
 	"math"
+
+	"techazsure-3dprint/backend/internal/config"
 )
 
 // Material represents 3D print material physical properties.
@@ -38,48 +40,49 @@ type QuoteResponse struct {
 	IsExpedited    bool    `json:"is_expedited"`
 }
 
-// CalculateQuote computes pricing, discounts, surcharges, and final totals.
+// CalculateQuote computes pricing with the platform's shipped default
+// configuration. Prefer CalculateQuoteCfg in handlers so admin-edited values
+// take effect.
 func CalculateQuote(volume float64, materialType string, deliveryTier string) (QuoteResponse, error) {
+	return CalculateQuoteCfg(config.Defaults(), volume, materialType, deliveryTier)
+}
+
+// CalculateQuoteCfg computes pricing, discounts, surcharges, and final totals
+// using admin-configurable rates.
+func CalculateQuoteCfg(cfg config.Config, volume float64, materialType string, deliveryTier string) (QuoteResponse, error) {
 	material, ok := Materials[materialType]
 	if !ok {
 		return QuoteResponse{}, errors.New("invalid material type")
 	}
 
-	// Base Price = (Volume * Material Density * Cost Per Gram) + (Print Time * Machine Hourly Rate)
-	// Print Time Hours = (Volume * 10) / 60
-	// Machine Cost = Print Time Hours * 120 = Volume * 20
+	// Base Price = (Volume * Material Density * Cost Per Gram) + machine cost per cm³
 	materialCost := volume * material.Density * material.CostPerGram
-	machineCost := volume * 20.0
+	machineCost := volume * cfg.MachineRatePerCm3
 	basePrice := materialCost + machineCost
 	basePrice = math.Round(basePrice*100) / 100
 
-	// Bulk discount rule:
-	// If volume_cm3 >= 100 or base_price >= 2000, apply 10% discount on the base price.
+	// Bulk discount rule: large volumes or totals get a percentage discount.
 	var bulkDiscount float64
-	if volume >= 100 || basePrice >= 2000 {
-		bulkDiscount = basePrice * 0.10
+	if volume >= cfg.BulkVolumeThreshold || basePrice >= cfg.BulkPriceThreshold {
+		bulkDiscount = basePrice * cfg.BulkDiscountPct
 	}
 	bulkDiscount = math.Round(bulkDiscount*100) / 100
 
-	// Eco tier discount (budget-5-7d gets flat discount of ₹100)
+	// Eco tier flat discount (budget-5-7d).
 	if deliveryTier == "budget-5-7d" {
-		bulkDiscount += 100.0
+		bulkDiscount += cfg.EcoDiscount
 	}
 	bulkDiscount = math.Round(bulkDiscount*100) / 100
 
-	// Delivery tiers:
-	// express-8h: Lead time = 8/24 days (0.3333 days). Multiplier = 1.833. Surcharge = base_price * 0.8333.
-	// standard-2d: Multiplier = 1.0. Surcharge = 0.
-	// budget-5-7d: Multiplier = 1.0. Surcharge = 0.
 	var rushMultiplier float64 = 1.0
 	var rushSurcharge float64 = 0.0
 	var isExpedited bool = false
 
 	if deliveryTier == "express-8h" {
-		rushMultiplier = 1.833
+		rushMultiplier = 1.0 + cfg.RushSurchargeRate
 		isExpedited = true
 		// Surcharge is calculated on the net price after bulk discount (excluding eco discount, which doesn't apply to express)
-		rushSurcharge = (basePrice - bulkDiscount) * 0.833
+		rushSurcharge = (basePrice - bulkDiscount) * cfg.RushSurchargeRate
 		rushSurcharge = math.Round(rushSurcharge*100) / 100
 	}
 

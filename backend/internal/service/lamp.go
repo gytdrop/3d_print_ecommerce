@@ -3,6 +3,8 @@ package service
 import (
 	"errors"
 	"math"
+
+	"techazsure-3dprint/backend/internal/config"
 )
 
 // LampSize describes one fixed Photo Lamp Frame size. Panel dimensions are the
@@ -37,29 +39,39 @@ var LampOrientations = map[string]bool{
 	"portrait":  true,
 }
 
-// CalculateLampQuote prices a Photo Lamp Frame: flat matrix base price with
-// the same delivery-tier adjustments used by CalculateQuote (express rush
-// surcharge, eco tier flat discount). Bulk volume discounts do not apply.
+// CalculateLampQuote prices a Photo Lamp Frame with the platform's shipped
+// default configuration. Prefer CalculateLampQuoteCfg in handlers so
+// admin-edited prices take effect.
 func CalculateLampQuote(size string, deliveryTier string) (QuoteResponse, error) {
-	cfg, ok := LampSizes[size]
-	if !ok {
+	return CalculateLampQuoteCfg(config.Defaults(), size, deliveryTier)
+}
+
+// CalculateLampQuoteCfg prices a Photo Lamp Frame: flat matrix base price
+// (admin-editable) with the same delivery-tier adjustments used by
+// CalculateQuoteCfg (express rush surcharge, eco tier flat discount). Bulk
+// volume discounts do not apply.
+func CalculateLampQuoteCfg(cfg config.Config, size string, deliveryTier string) (QuoteResponse, error) {
+	if _, ok := LampSizes[size]; !ok {
 		return QuoteResponse{}, errors.New("invalid lamp size: must be small, medium, or large")
 	}
 
-	basePrice := cfg.Price
+	basePrice := cfg.LampPrices[size]
+	if basePrice <= 0 {
+		basePrice = LampSizes[size].Price
+	}
 
 	var bulkDiscount float64
 	if deliveryTier == "budget-5-7d" {
-		bulkDiscount = 100.0
+		bulkDiscount = cfg.EcoDiscount
 	}
 
 	var rushMultiplier float64 = 1.0
 	var rushSurcharge float64 = 0.0
 	var isExpedited bool = false
 	if deliveryTier == "express-8h" {
-		rushMultiplier = 1.833
+		rushMultiplier = 1.0 + cfg.RushSurchargeRate
 		isExpedited = true
-		rushSurcharge = math.Round(basePrice*0.833*100) / 100
+		rushSurcharge = math.Round(basePrice*cfg.RushSurchargeRate*100) / 100
 	}
 
 	finalPrice := basePrice + rushSurcharge - bulkDiscount
