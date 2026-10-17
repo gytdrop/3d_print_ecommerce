@@ -39,7 +39,10 @@ export default function ModelViewer() {
   const fileData = useOrderStore((s) => s.fileData);
   const setFileData = useOrderStore((s) => s.setFileData);
 
-  const fileUrl = fileData?.fileUrl || '/placeholder.stl';
+  // Photos (gift mode) are not STL geometry — preview the placeholder mesh
+  // instead of feeding an image to the STL parser.
+  const isImageFile = /\.(jpe?g|png)$/i.test(fileData?.fileName ?? '');
+  const fileUrl = !fileData?.fileUrl || isImageFile ? '/placeholder.stl' : fileData.fileUrl;
   const fileName = fileData?.fileName || 'placeholder.stl';
   
   // Stats derivations

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   Upload,
   CheckCircle,
@@ -65,16 +65,24 @@ export default function UploadZone() {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // ── Unified processed-file state ─────────────────────────────────────────────
-  const [processedFile, setProcessedFile] = useState<ProcessedFile | null>(null);
+  // Rehydrated from the store on mount: the page remounts this component when
+  // previewGenerated flips, and the accepted-file card must survive that.
+  const [processedFile, setProcessedFile] = useState<ProcessedFile | null>(() =>
+    fileData
+      ? {
+          name: fileData.fileName,
+          type: MESH_EXTENSIONS.includes(getExtension(fileData.fileName)) ? 'mesh' : 'image',
+          url:  fileData.fileUrl ?? '',
+          size: fileData.fileSize,
+        }
+      : null,
+  );
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Revoke object URL on unmount or file change
-  useEffect(() => {
-    return () => {
-      if (processedFile?.url) URL.revokeObjectURL(processedFile.url);
-    };
-  }, [processedFile]);
+  // NOTE: the blob URL is intentionally NOT revoked on unmount — ModelViewer
+  // and the remounted zone still read it from the store. It is revoked when
+  // the user removes or replaces the file (resetFile / acceptFile).
 
   // Reset the zone whenever the user switches pipeline mode
   const switchMode = (mode: UploadMode) => {
@@ -112,7 +120,8 @@ export default function UploadZone() {
       setDropState('processing');
       setErrorMsg('');
 
-      // Build the processed file record
+      // Build the processed file record (release the previous file's URL)
+      if (processedFile?.url) URL.revokeObjectURL(processedFile.url);
       const isMesh = MESH_EXTENSIONS.includes(ext);
       const objectUrl = URL.createObjectURL(file);
 
@@ -135,7 +144,7 @@ export default function UploadZone() {
         setDropState('accepted');
       }, 1800);
     },
-    [uploadMode, setFileData, setBasePrice]
+    [uploadMode, processedFile, setFileData, setBasePrice]
   );
 
   const resetFile = useCallback(() => {
@@ -453,6 +462,27 @@ export default function UploadZone() {
                 <CheckCircle size={14} />
                 Mesh file accepted — proceed to material selection
               </p>
+
+              {!previewGenerated && (
+                <button
+                  type="button"
+                  disabled={isGenerating}
+                  onClick={(e) => { e.stopPropagation(); handleGeneratePreview(); }}
+                  className="btn-accent w-full max-w-[280px] justify-center py-3 text-sm mt-1 flex items-center gap-2 relative overflow-hidden group/btn hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16} />
+                      Preparing 3D viewport...
+                    </>
+                  ) : (
+                    <>
+                      <Box size={16} className="group-hover/btn:rotate-12 transition-transform duration-300" />
+                      Configure Print &amp; Get Quote
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           )}
 
