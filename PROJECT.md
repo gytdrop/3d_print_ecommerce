@@ -63,6 +63,8 @@ All services are orchestrated in `docker-compose.yml`:
   - `app/zones/page.tsx` - Bangalore delivery zone checker.
   - `components/Fused3DScrollExperience.tsx` - Zero vertical displacement scrollytelling engine (scroll lerp, video scrubbing, stage fade windows, quantized state updates for render performance).
   - `components/home/StageScenes.tsx` - Ungrouped free-positioned stage compositions (memoized; scrub-reversible per-element drift/stagger choreography).
+  - `components/home/MobileHomeFrame.tsx` - Phone-portrait chrome (header, HUD-bracketed stage zone + ruler, stage dots + scrub track); rendered below `md` only.
+  - `components/home/MobileStageScenes.tsx` - Phone-portrait stage compositions (single reading column, same scrub-reversible drift model).
   - `components/home/FloatingArt.tsx` - 2.5D gradient-faced SVG product vectors floated per stage.
   - `components/hud/EngineeringHudRails.tsx` - Blueprint figure rail (left) + live telemetry rail (right), desktop only; stage fade windows mirror `Fused3DScrollExperience` and must be kept in sync.
   - `components/layout/ConditionalHeader.tsx` & `ConditionalFooter.tsx` - Layout routing.
