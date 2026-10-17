@@ -73,7 +73,8 @@ Combines the interactive showcase feel of [`antigravity.google`](https://antigra
    - `POST /api/orders`: Order placement generating initial `order_placed` timeline checkpoint.
    - `GET /api/orders/track?id=...`: Real-time timeline telemetry lookup.
 3. **Frontend Storefront**:
-   - Homepage (`/`): In-place 6-stage 3D video scrub showcase with timeline scrub pills.
+   - Homepage (`/`): In-place 6-stage 3D video scrub showcase with timeline scrub pills; ungrouped scene choreography, blueprint/telemetry HUD rails, and floating 2.5D product vectors (PR #2, 2026-10-17 — see `task2_home.md`).
+   - Lamp (`/lamp`): Photo-to-lithophane configurator with live Three.js preview covering all customisations (3 sizes × 2 orientations × 3 finishes × lamp toggle × crop).
    - Explore (`/explore`): Curated product catalog with Schema.org `ItemList` and `Product` JSON-LD.
    - Upload (`/upload`): STL/photo upload flow with Three.js preview and dynamic pricing summary.
    - Track (`/track`): Real-time 5-stage dispatch telemetry portal.

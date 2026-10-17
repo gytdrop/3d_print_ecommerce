@@ -87,7 +87,29 @@ This note is mirrored in `README.md` and `PROJECT.md`.
   video still scrubs on the precise unquantized value
 - [x] Docs updated: README key-features section, PROJECT.md code layout,
   LEDGER.md design language (all described the retired frosted-glass cards)
-- [ ] Final owner review → merge PR #2
+- [x] Legibility surfaces (round 7): Store/Company link group on a dark-glass chip
+  (`black/45` + blur); both HUD rails get a `#05070c/60` backdrop panel — rule is
+  now *big type on scrims, small type on dark glass*
+- [x] `/lamp` 3D-mode audit (2026-10-17, requested by owner): with a photo loaded the
+  WebGL preview mounts and rebuilds correctly through all 3 sizes × 2 orientations ×
+  3 box finishes and the lamp on/off toggle, no Three.js errors (verified by driving
+  every control in-browser). Crop/zoom/pan feed the preview via a 300 ms debounced
+  512 px texture. **There is no frame-style option** — the five `public/frames/*.png`
+  styles are `/explore` catalogue art only and are not in `photo-lamp-spec.md`.
+  Minor non-blocking notes in `LampPreview3D.tsx`: previous texture isn't disposed on
+  rebuild; `lampOn` is captured inside the texture-load callback (toggle during load
+  can go stale); crop changes rebuild the whole group instead of swapping maps.
+
+## Pending
+
+- [ ] Final owner review of PR #2 on the dev server → merge to `master`
+- [ ] Optional: real-device scroll feel check (FPS could not be measured headlessly);
+  remaining suspects if lag persists are per-frame video seeks and backdrop-blur count
+- [ ] Optional: `LampPreview3D` cleanups listed above (texture dispose, stale `lampOn`,
+  map-swap instead of rebuild) — out of this task's scope
+- [ ] Decide whether frame *styles* (classic / heart / vintage / minimal / celebration)
+  should become a `/lamp` customisation; if yes it needs spec + backend STL generator
+  support, not just the 3D preview
 
 ## Log
 

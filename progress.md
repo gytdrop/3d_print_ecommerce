@@ -96,3 +96,12 @@ Last updated: 2026-10-17
   - `/zones` now queries the live backend (`/api/pincodes/check`) and shows the shipping-estimator ETA instead of a hardcoded client-side pincode algorithm that ignored admin edits; offline fallback retained.
   - `/upload` project mode dead end fixed: mesh (STL/OBJ) uploads now get a "Configure Print & Get Quote" button — previously MaterialSelect/DeliveryTiers/PriceSummary were unreachable for mesh files.
   - Fixed blob-URL revocation bug: the upload zone remounting on preview generation revoked the file's object URL and blanked the accepted-file card, breaking the Three.js viewer ("Error loading STL: Failed to fetch"). Real STL geometry now loads and computes true volume for quotes; photo uploads preview the placeholder mesh instead of being fed to the STL parser.
+
+### Phase 5: Home Page Visual Redesign (PR #2 — awaiting merge)
+- [x] **M17: Engineering HUD home page** (2026-10-17, branch `claude/home-page-visual-design-02688b`, see [task2_home.md](task2_home.md)):
+  - Stage cards removed; every stage is an ungrouped, free-positioned scene (`components/home/StageScenes.tsx`) with scrub-reversible per-element drift/stagger choreography.
+  - Blueprint figure rail (left) + live telemetry rail (right) on desktop (`components/hud/EngineeringHudRails.tsx`); stage-matched floating 2.5D product vectors (`components/home/FloatingArt.tsx`). All inline SVG, no external assets (VPS-safe).
+  - Legibility system: local radial scrims + layered text shadows for headline type, dark-glass chips/panels for small type and the rails. Scroll-performance pass: lerp snaps on convergence, quantized state updates, memoized scenes/rails (previously the whole tree re-rendered at 60 fps even while idle).
+  - `/lamp` 3D preview audited: rebuilds correctly for every customisation (size, orientation, box finish, lamp toggle, crop); no frame-style option exists in product or spec.
+  - Verified: `tsc` + `next build` clean on the merged branch; PR mergeable with `master`.
+- [ ] Owner review + merge of PR #2.
