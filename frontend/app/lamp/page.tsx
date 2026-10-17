@@ -28,9 +28,9 @@ const productJsonLd = {
 export default async function LampPage({
   searchParams,
 }: {
-  searchParams: Promise<{ size?: string }>;
+  searchParams: Promise<{ size?: string; frame?: string }>;
 }) {
-  const { size } = await searchParams;
+  const { size, frame } = await searchParams;
 
   return (
     <div className="min-h-screen py-8 px-4 bg-[var(--bg-page)] transition-colors duration-300">
@@ -49,7 +49,7 @@ export default async function LampPage({
           </p>
         </div>
 
-        <LampConfigurator initialSize={size} />
+        <LampConfigurator initialSize={size} initialFrame={frame} />
       </div>
     </div>
   );

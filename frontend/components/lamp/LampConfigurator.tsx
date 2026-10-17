@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import {
   LAMP_SIZES, BOX_COLORS, MIN_PHOTO_SHORT_EDGE, MAX_PHOTO_BYTES,
-  ACCEPTED_PHOTO_TYPES, panelAspect, estimateLampPrice,
+  ACCEPTED_PHOTO_TYPES, PENDING_PHOTO_KEY, panelAspect, estimateLampPrice,
   type LampSizeId, type LampOrientation, type LampBoxColor, type LampDeliveryTier,
 } from './lampConfig';
 
@@ -26,6 +26,8 @@ interface ServerLampConfig {
   eco_discount: number;
   rush_surcharge_rate: number;
 }
+
+import { FRAME_STYLES, isFrameStyleId, type FrameStyleId } from './frameStyles';
 
 const LampPreview3D = dynamic(() => import('./LampPreview3D'), { ssr: false });
 
@@ -49,12 +51,21 @@ const DELIVERY_TIERS: { id: LampDeliveryTier; label: string; eta: string; needsE
   { id: 'budget-5-7d', label: 'Budget Eco', eta: '5–7 days · ₹100 off' },
 ];
 
-export default function LampConfigurator({ initialSize }: { initialSize?: string }) {
+export default function LampConfigurator({
+  initialSize,
+  initialFrame,
+}: {
+  initialSize?: string;
+  initialFrame?: string;
+}) {
   // ── Configuration state ────────────────────────────────────────────────────
   const validInitial = (['small', 'medium', 'large'] as const).find((s) => s === initialSize);
   const [size, setSize] = useState<LampSizeId>(validInitial ?? 'medium');
   const [orientation, setOrientation] = useState<LampOrientation>('landscape');
   const [boxColor, setBoxColor] = useState<LampBoxColor>('black');
+  const [frameStyle, setFrameStyle] = useState<FrameStyleId>(
+    isFrameStyleId(initialFrame) ? initialFrame : 'lamp-box',
+  );
   const [lampOn, setLampOn] = useState(true);
 
   // ── Photo + crop state ─────────────────────────────────────────────────────
@@ -112,6 +123,23 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
       .then((data) => data && setServerCfg(data))
       .catch(() => {}); // constants remain the fallback
   }, []);
+
+  // Photo handed over from /explore ("upload there → continue here").
+  useEffect(() => {
+    if (photo) return;
+    const pending = sessionStorage.getItem(PENDING_PHOTO_KEY);
+    if (!pending) return;
+    sessionStorage.removeItem(PENDING_PHOTO_KEY);
+    try {
+      const { dataUrl, name } = JSON.parse(pending) as { dataUrl: string; name?: string };
+      fetch(dataUrl)
+        .then((res) => res.blob())
+        .then((blob) => acceptFile(new File([blob], name || 'photo.jpg', { type: blob.type || 'image/jpeg' })))
+        .catch(() => {});
+    } catch {
+      // Malformed handoff payload — ignore and let the user upload manually.
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Crop window math (source-pixel space) ──────────────────────────────────
   const cropWindow = useMemo(() => {
@@ -267,6 +295,7 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
           lamp_size: size,
           lamp_orientation: orientation,
           lamp_box_color: boxColor,
+          frame_style: frameStyle,
           photo_url: uploadData.photo_url,
           file_name: photo.file.name,
           file_size: blob.size,
@@ -464,17 +493,51 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
               size={size}
               orientation={orientation}
               boxColor={boxColor}
+              frameStyle={frameStyle}
               lampOn={lampOn}
+              onToggleLamp={() => setLampOn((v) => !v)}
             />
           </div>
           <p className="text-[10px] text-[var(--text-muted)] mt-2 text-center">
-            Drag to orbit · scroll to zoom · warm-white USB-C LED included with every lamp
+            {frameStyle === 'lamp-box'
+              ? 'Drag to orbit · scroll to zoom · click the switch on the side of the box to light the lamp'
+              : 'Drag to orbit · scroll to zoom · use the Lamp On/Off toggle to preview the backlight'}
           </p>
         </div>
       </div>
 
       {/* Right: configuration + order */}
       <div className="lg:col-span-2 flex flex-col gap-6 w-full">
+        {/* Frame style — the phase right after the photo is imported */}
+        <div className="glass-card p-4">
+          <h3 className="heading-section text-sm text-[var(--text-on-page)] mb-3">
+            Choose Your Frame
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {FRAME_STYLES.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setFrameStyle(f.id)}
+                className={`p-3 rounded-lg border text-left transition-all ${
+                  frameStyle === f.id
+                    ? 'border-[var(--bg-accent)] bg-[var(--bg-accent)]/10 ring-1 ring-[var(--bg-accent)]'
+                    : 'border-[var(--border-subtle)] hover:border-[var(--bg-accent)]/50'
+                }`}
+              >
+                <span className="block text-xs font-semibold text-[var(--text-on-page)]">
+                  {f.label}
+                </span>
+                <span className="block text-[10px] text-[var(--text-muted)] mt-0.5 leading-tight">
+                  {f.description}
+                </span>
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-[var(--text-muted)] mt-2">
+            Your photo is printed in white with 2.5D depth — the relief reveals the image when lit.
+          </p>
+        </div>
+
         {/* Size + orientation */}
         <div className="glass-card p-4">
           <h3 className="heading-section text-sm text-[var(--text-on-page)] mb-3">Size</h3>

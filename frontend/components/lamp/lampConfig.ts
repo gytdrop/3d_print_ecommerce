@@ -20,9 +20,9 @@ export interface LampSizeConfig {
 }
 
 export const LAMP_SIZES: Record<LampSizeId, LampSizeConfig> = {
-  small:  { label: 'Small',  panelWcm: 10, panelHcm: 8,  depthCm: 5.5, price: 499 },
-  medium: { label: 'Medium', panelWcm: 15, panelHcm: 10, depthCm: 5.5, price: 799, popular: true },
-  large:  { label: 'Large',  panelWcm: 20, panelHcm: 15, depthCm: 6,   price: 1299 },
+  small:  { label: 'Small',  panelWcm: 10, panelHcm: 8,  depthCm: 3, price: 499 },
+  medium: { label: 'Medium', panelWcm: 15, panelHcm: 10, depthCm: 3, price: 799, popular: true },
+  large:  { label: 'Large',  panelWcm: 20, panelHcm: 15, depthCm: 3, price: 1299 },
 };
 
 export const BOX_COLORS: { id: LampBoxColor; label: string; hex: string }[] = [
@@ -34,6 +34,9 @@ export const BOX_COLORS: { id: LampBoxColor; label: string; hex: string }[] = [
 export const BOX_COLOR_HEX: Record<LampBoxColor, string> = Object.fromEntries(
   BOX_COLORS.map((c) => [c.id, c.hex]),
 ) as Record<LampBoxColor, string>;
+
+/** sessionStorage key used by /explore to hand a photo into the /lamp flow. */
+export const PENDING_PHOTO_KEY = 'techaz_pending_photo';
 
 /** Minimum short-edge resolution before the soft quality warning (P0-2). */
 export const MIN_PHOTO_SHORT_EDGE = 1200;

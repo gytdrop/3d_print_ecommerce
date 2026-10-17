@@ -115,6 +115,12 @@ func validateLampOrder(req *OrderRequest) (photoPath string, errMsg string) {
 	if !service.LampBoxColors[req.LampBoxColor] {
 		return "", "lamp_box_color must be black, white, or walnut"
 	}
+	if req.FrameStyle == "" {
+		req.FrameStyle = "lamp-box"
+	}
+	if !service.LampFrameStyles[req.FrameStyle] {
+		return "", "frame_style must be lamp-box, classic, minimal, vintage, heart, or celebration"
+	}
 	const prefix = "/uploads/photos/"
 	if !strings.HasPrefix(req.PhotoURL, prefix) {
 		return "", "photo_url must reference an uploaded photo"

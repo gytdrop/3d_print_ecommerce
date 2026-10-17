@@ -21,9 +21,9 @@ type LampSize struct {
 
 // LampSizes is the fixed Photo Lamp Frame pricing matrix (photo-lamp-spec.md).
 var LampSizes = map[string]LampSize{
-	"small":  {PanelWidthMm: 100, PanelHeightMm: 80, BoxDepthMm: 55, Price: 499, NominalVolumeCm3: 42},
-	"medium": {PanelWidthMm: 150, PanelHeightMm: 100, BoxDepthMm: 55, Price: 799, NominalVolumeCm3: 78},
-	"large":  {PanelWidthMm: 200, PanelHeightMm: 150, BoxDepthMm: 60, Price: 1299, NominalVolumeCm3: 142},
+	"small":  {PanelWidthMm: 100, PanelHeightMm: 80, BoxDepthMm: 30, Price: 499, NominalVolumeCm3: 42},
+	"medium": {PanelWidthMm: 150, PanelHeightMm: 100, BoxDepthMm: 30, Price: 799, NominalVolumeCm3: 78},
+	"large":  {PanelWidthMm: 200, PanelHeightMm: 150, BoxDepthMm: 30, Price: 1299, NominalVolumeCm3: 142},
 }
 
 // LampBoxColors enumerates the box color/finish options offered in v1.
@@ -37,6 +37,18 @@ var LampBoxColors = map[string]bool{
 var LampOrientations = map[string]bool{
 	"landscape": true,
 	"portrait":  true,
+}
+
+// LampFrameStyles enumerates the frame styles offered by the configurator.
+// Geometry for each style lives in the frontend (frameStyles.ts); the backend
+// records the choice on the order for the print operator.
+var LampFrameStyles = map[string]bool{
+	"lamp-box":    true,
+	"classic":     true,
+	"minimal":     true,
+	"vintage":     true,
+	"heart":       true,
+	"celebration": true,
 }
 
 // CalculateLampQuote prices a Photo Lamp Frame with the platform's shipped

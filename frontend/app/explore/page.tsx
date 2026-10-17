@@ -1,8 +1,15 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import Link from 'next/link';
-import { Upload, Filter, Box, LayoutGrid, Sparkles, Frame, Star, Home, Gem, KeyRound, Monitor, Building2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import { Upload, Filter, Box, LayoutGrid, Sparkles, Frame, Star, Home, Gem, KeyRound, Monitor, Building2, Loader2 } from 'lucide-react';
+import { PLACEMENTS, type PlacementId } from '@/components/explore/ExploreShowcase3D';
+import { PENDING_PHOTO_KEY } from '@/components/lamp/lampConfig';
+import { FRAME_STYLE_BY_PRODUCT } from '@/components/lamp/frameStyles';
+
+const ExploreShowcase3D = dynamic(() => import('@/components/explore/ExploreShowcase3D'), { ssr: false });
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 type CategoryId =
@@ -227,6 +234,44 @@ const categories: { id: CategoryId; label: string }[] = [
 /* ─── Component ──────────────────────────────────────────────────────────── */
 export default function ExplorePage() {
   const [activeCategory, setActiveCategory] = useState<CategoryId>('all');
+  const [placement, setPlacement] = useState<PlacementId>('desk');
+  const [handingOff, setHandingOff] = useState(false);
+  const showcaseFileRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
+
+  // Upload here → hand the photo to the /lamp configurator (downscaled data
+  // URL via sessionStorage) and continue the flow there.
+  const handleShowcaseUpload = (file: File) => {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 15 * 1024 * 1024) {
+      return;
+    }
+    setHandingOff(true);
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const maxEdge = 2000;
+      const scale = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(img.naturalWidth * scale);
+      canvas.height = Math.round(img.naturalHeight * scale);
+      canvas.getContext('2d')!.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(objectUrl);
+      try {
+        sessionStorage.setItem(
+          PENDING_PHOTO_KEY,
+          JSON.stringify({ dataUrl: canvas.toDataURL('image/jpeg', 0.9), name: file.name }),
+        );
+      } catch {
+        // Storage quota exceeded — the user can re-upload on /lamp.
+      }
+      router.push('/lamp');
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      setHandingOff(false);
+    };
+    img.src = objectUrl;
+  };
 
   const filtered =
     activeCategory === 'all'
@@ -279,6 +324,80 @@ export default function ExplorePage() {
             From iconic lithophane frames to figurines, home decor, jewelry and more — 
             all precision-printed and delivered in under 8 hours.
           </p>
+        </div>
+
+        {/* See it in your space — 3D placement showcase + direct photo upload */}
+        <div className="glass-card p-4 md:p-6 mb-10 md:mb-14 animate-fade-in-up delay-100">
+          <div className="flex flex-col lg:flex-row gap-6 items-stretch">
+            <div className="flex-1 min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <h2 className="heading-section text-base text-[var(--text-on-page)]">
+                  See the Photo Lamp in your space
+                </h2>
+                <div className="flex gap-1.5">
+                  {PLACEMENTS.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setPlacement(p.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs border transition-all ${
+                        placement === p.id
+                          ? 'border-[var(--bg-accent)] bg-[var(--bg-accent)]/10 text-[var(--text-on-page)] font-semibold'
+                          : 'border-[var(--border-subtle)] text-[var(--text-muted)] hover:border-[var(--bg-accent)]/50'
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="h-[300px] rounded-xl bg-[#0a0d14] overflow-hidden">
+                <ExploreShowcase3D placement={placement} />
+              </div>
+              <p className="text-[10px] text-[var(--text-muted)] mt-2 text-center">
+                {PLACEMENTS.find((p) => p.id === placement)?.caption} · drag to orbit
+              </p>
+            </div>
+
+            <div className="lg:w-72 flex flex-col justify-center gap-3 shrink-0">
+              <h3 className="text-sm font-semibold text-[var(--text-on-page)]">
+                Make it yours
+              </h3>
+              <p className="text-xs text-[var(--text-on-card)]">
+                Upload a photo now — we&apos;ll take you straight to the lamp
+                customizer with your picture loaded, pick a frame, and see it
+                glow in 3D.
+              </p>
+              <button
+                onClick={() => showcaseFileRef.current?.click()}
+                disabled={handingOff}
+                className="btn-accent py-3 px-4 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {handingOff ? (
+                  <>
+                    <Loader2 size={15} className="animate-spin" /> Opening customizer…
+                  </>
+                ) : (
+                  <>
+                    <Upload size={15} /> Upload Your Photo
+                  </>
+                )}
+              </button>
+              <input
+                ref={showcaseFileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleShowcaseUpload(file);
+                  e.target.value = '';
+                }}
+              />
+              <p className="text-[10px] text-[var(--text-muted)]">
+                JPG · PNG · WebP up to 15MB — from ₹499 with LED included
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Category Tabs */}
@@ -387,7 +506,11 @@ export default function ExplorePage() {
                     </div>
 
                     <Link
-                      href={product.id === 'photo-lamp-frame' ? '/lamp' : '/upload'}
+                      href={
+                        FRAME_STYLE_BY_PRODUCT[product.id]
+                          ? `/lamp?frame=${FRAME_STYLE_BY_PRODUCT[product.id]}`
+                          : '/upload'
+                      }
                       className="w-full text-center btn-ghost text-xs md:text-sm py-1.5 md:py-2 px-2 hover:bg-[var(--bg-accent)] hover:text-[var(--text-on-accent)] hover:border-transparent transition-all block"
                     >
                       Customize &amp; Order

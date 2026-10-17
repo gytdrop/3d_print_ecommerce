@@ -94,8 +94,10 @@ This note is mirrored in `README.md` and `PROJECT.md`.
   WebGL preview mounts and rebuilds correctly through all 3 sizes × 2 orientations ×
   3 box finishes and the lamp on/off toggle, no Three.js errors (verified by driving
   every control in-browser). Crop/zoom/pan feed the preview via a 300 ms debounced
-  512 px texture. **There is no frame-style option** — the five `public/frames/*.png`
-  styles are `/explore` catalogue art only and are not in `photo-lamp-spec.md`.
+  512 px texture. *Correction after merging `master` (M17 frame styles landed in
+  parallel):* the configurator now has a frame-style phase — Lamp Box, Classic, Minimal,
+  Vintage, Heart, Celebration (`frameStyles.ts`) — and the preview rebuilds on
+  `frameStyle` too; re-verified all six styles cycle cleanly after the merge.
   Minor non-blocking notes in `LampPreview3D.tsx`: previous texture isn't disposed on
   rebuild; `lampOn` is captured inside the texture-load callback (toggle during load
   can go stale); crop changes rebuild the whole group instead of swapping maps.
@@ -114,9 +116,8 @@ This note is mirrored in `README.md` and `PROJECT.md`.
   remaining suspects if lag persists are per-frame video seeks and backdrop-blur count
 - [ ] Optional: `LampPreview3D` cleanups listed above (texture dispose, stale `lampOn`,
   map-swap instead of rebuild) — out of this task's scope
-- [ ] Decide whether frame *styles* (classic / heart / vintage / minimal / celebration)
-  should become a `/lamp` customisation; if yes it needs spec + backend STL generator
-  support, not just the 3D preview
+- [x] ~~Decide whether frame styles should become a `/lamp` customisation~~ — landed on
+  `master` as M17 (frame picker + `orders.frame_style`) while this task was in flight
 
 ## Log
 
