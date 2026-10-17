@@ -412,7 +412,7 @@ export default function EngineeringHudRails({ scrollProgress, activeStepIndex }:
   return (
     <div
       aria-hidden="true"
-      className="hidden xl:block pointer-events-none select-none"
+      className="hidden xl:block absolute inset-0 pointer-events-none select-none"
       style={{ filter: 'drop-shadow(0 1px 3px rgba(0,0,0,0.9)) drop-shadow(0 4px 16px rgba(0,0,0,0.6))' }}
     >
       {/* ─── Left rail: per-stage blueprint diagram ─── */}

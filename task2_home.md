@@ -66,6 +66,14 @@ This note is mirrored in `README.md` and `PROJECT.md`.
   - Scene zone reserves rail space on xl+ (`xl:left-56 xl:right-56`); rail
     recede behavior removed (no more collisions, FIG.05/06 fully visible)
   - Mobile (< md): compact stacked fallbacks, one small glass panel per stage
+- [x] Typography legibility pass (round 4): layered text shadows, lifted slate
+  tones, dark-glass chips, deeper scrims, rail drop-shadows
+- [x] 2.5D floating product art (round 5) — `frontend/components/home/FloatingArt.tsx`:
+  glossy gradient-faced vectors (glowing lithophane lamp, layer slabs, LED base,
+  dispatch parcel + pin, fanned frames) floating per stage with bob animation +
+  scroll drift; positions change per stage. Also fixed rails jumping above the
+  header (drop-shadow filter made the wrapper a containing block — wrapper is
+  now `absolute inset-0`).
 - [ ] Owner review on dev server
 
 ## Log

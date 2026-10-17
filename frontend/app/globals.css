@@ -265,3 +265,15 @@ body {
 .hud-sweep {
   animation: hud-sweep 7s ease-in-out infinite;
 }
+
+/* ─── Home HUD: floating 2.5D product art ────────────────────────────────── */
+@keyframes hud-float {
+  0%, 100% { transform: translateY(-7px) rotate(-1.4deg); }
+  50%      { transform: translateY(8px) rotate(1.4deg); }
+}
+.hud-float {
+  animation: hud-float 7s ease-in-out infinite;
+}
+.hud-float-alt {
+  animation: hud-float 9.5s ease-in-out infinite reverse;
+}

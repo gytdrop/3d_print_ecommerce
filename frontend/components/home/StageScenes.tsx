@@ -13,9 +13,11 @@
  * keyframe delays, which cannot reverse with a scrub.
  */
 
+import type { ComponentType } from 'react';
 import Link from 'next/link';
 import { Upload, ArrowRight, Shield, Clock, MapPin, Mail } from 'lucide-react';
 import { siteContent } from '@/config/siteContent';
+import { LampArt, LayersArt, BaseArt, ParcelArt, FramesArt, type ArtProps } from '@/components/home/FloatingArt';
 
 export interface SpecStage {
   step: string;
@@ -71,7 +73,16 @@ export function HudFrame() {
 
 /* ─── Stages 01–04: spec scenes ──────────────────────────────────────────── */
 
+/** Per-stage 2.5D floating art: main piece matches the stage's subject. */
+const STAGE_FLOATS: Record<string, { main: ComponentType<ArtProps>; alt: ComponentType<ArtProps> }> = {
+  '01': { main: LampArt, alt: LayersArt },
+  '02': { main: LayersArt, alt: LampArt },
+  '03': { main: BaseArt, alt: LampArt },
+  '04': { main: ParcelArt, alt: LampArt },
+};
+
 export function SpecStageScene({ stage, o }: { stage: SpecStage; o: number }) {
+  const floats = STAGE_FLOATS[stage.step];
   return (
     <>
       {/* ── Desktop: free-positioned composition ── */}
@@ -86,6 +97,28 @@ export function SpecStageScene({ stage, o }: { stage: SpecStage; o: number }) {
               'radial-gradient(ellipse at 32% 50%, rgba(5,6,8,0.88) 0%, rgba(5,6,8,0.55) 55%, rgba(5,6,8,0) 80%)',
           }}
         />
+
+        {/* 2.5D floating product art — behind the text layer */}
+        {floats && (
+          <>
+            <div
+              className="absolute right-[2%] top-[50%] w-32 lg:w-40 pointer-events-none"
+              style={drift(o, 1.4, 34, 18)}
+            >
+              <div className="hud-float">
+                <floats.main id={`f${stage.step}m`} />
+              </div>
+            </div>
+            <div
+              className="absolute left-[44%] top-0 w-20 opacity-80 pointer-events-none"
+              style={drift(o, 1.7, 0, -26)}
+            >
+              <div className="hud-float-alt">
+                <floats.alt id={`f${stage.step}a`} />
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Tag — drifts in from the left */}
         <div className="absolute left-0 top-0 flex items-center gap-2.5" style={drift(o, 1, -28, 0)}>
@@ -214,6 +247,13 @@ export function PricingScene({ o, tiers }: { o: number; tiers: PricingTier[] }) 
           }}
         />
 
+        {/* Floating fanned frames — behind the tier chips */}
+        <div className="absolute left-[58%] bottom-[2%] w-28 pointer-events-none" style={drift(o, 1.6, 0, 30)}>
+          <div className="hud-float">
+            <FramesArt id="fprice" />
+          </div>
+        </div>
+
         {/* Heading — from the left */}
         <div className="absolute left-0 top-0 max-w-sm" style={drift(o, 1, -26, 0)}>
           <h2 className={`text-2xl font-semibold text-white tracking-tight ${TS}`}>Select Frame Dimensions</h2>
@@ -339,6 +379,13 @@ export function FooterScene({ o }: { o: number }) {
               'radial-gradient(ellipse at 30% 50%, rgba(5,6,8,0.88) 0%, rgba(5,6,8,0.55) 55%, rgba(5,6,8,0) 80%)',
           }}
         />
+
+        {/* Floating glowing lamp — the product, as the closing image */}
+        <div className="absolute right-[3%] top-[42%] w-28 lg:w-32 pointer-events-none" style={drift(o, 1.5, 28, 20)}>
+          <div className="hud-float">
+            <LampArt id="ffoot" />
+          </div>
+        </div>
 
         {/* Brand block — from the left */}
         <div className="absolute left-0 top-[14%] max-w-sm" style={drift(o, 1, -30, 0)}>
