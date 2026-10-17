@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import ConditionalHeader from '@/components/layout/ConditionalHeader';
 import ConditionalFooter from '@/components/layout/ConditionalFooter';
@@ -21,6 +21,15 @@ export const metadata: Metadata = {
     title: `${siteContent.navbar.logoText} — ${siteContent.hero.title}`,
     description: siteContent.hero.description,
   },
+};
+
+// Phone portrait: let the fixed home frame extend under the notch / home bar
+// (safe-area insets are applied inside the frame itself).
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: '#050608',
 };
 
 // ─── Theme Resolution Logic ──────────────────────────────────────────────────

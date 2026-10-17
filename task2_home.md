@@ -66,6 +66,7 @@ This note is mirrored in `README.md` and `PROJECT.md`.
   - Scene zone reserves rail space on xl+ (`xl:left-56 xl:right-56`); rail
     recede behavior removed (no more collisions, FIG.05/06 fully visible)
   - Mobile (< md): compact stacked fallbacks, one small glass panel per stage
+    (superseded 2026-10-17 by the phone-portrait pass below)
 - [x] Typography legibility pass (round 4): layered text shadows, lifted slate
   tones, dark-glass chips, deeper scrims, rail drop-shadows
 - [x] 2.5D floating product art (round 5) — `frontend/components/home/FloatingArt.tsx`:
@@ -88,6 +89,23 @@ This note is mirrored in `README.md` and `PROJECT.md`.
 - [x] Docs updated: README key-features section, PROJECT.md code layout,
   LEDGER.md design language (all described the retired frosted-glass cards)
 - [ ] Final owner review → merge PR #2
+- [x] Phone-portrait pass (branch `claude/home-mobile-portrait-view-445a7a`, 2026-10-17) —
+  desktop (`md+`) untouched; below `md` the experience gets its own composition:
+  - `frontend/components/home/MobileHomeFrame.tsx` — phone chrome: brand + Products /
+    Order header, HUD-bracketed stage zone with a slim right-edge telemetry ruler (ticks +
+    live diamond marker), swipe cue, bottom stage dots (active dot expands to its label)
+    + live scrub track. `100dvh` + safe-area padding (`viewport-fit=cover` set in
+    `app/layout.tsx`).
+  - `frontend/components/home/MobileStageScenes.tsx` — each desktop scatter scene
+    re-choreographed as one reading column (tag row → badge → headline → description →
+    chips → metric → full-width CTAs; pricing as 56 px tier rows; directory as two link
+    columns + full-width CTA). Same scrub-reversible `drift` model, mostly vertical.
+    Floating 2.5D art kept, placed above the tag row and beside the chips.
+  - Touch model (phone only): swipe sensitivity lowered so one swipe ≈ one stage, and on
+    release the timeline snaps to the nearest stage plateau (`STAGE_TARGETS`), so a flick
+    never parks between two crossfades. Taps / <10 px moves leave the timeline alone.
+  - Desktop frame now renders only at `md+` (`useIsPhone` after mount; CSS decides before);
+    old `md:hidden` fallbacks removed from `StageScenes.tsx`. Phone landscape not addressed.
 
 ## Log
 
