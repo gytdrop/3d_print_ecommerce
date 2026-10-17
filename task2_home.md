@@ -88,7 +88,28 @@ This note is mirrored in `README.md` and `PROJECT.md`.
   video still scrubs on the precise unquantized value
 - [x] Docs updated: README key-features section, PROJECT.md code layout,
   LEDGER.md design language (all described the retired frosted-glass cards)
-- [ ] Final owner review → merge PR #2
+- [x] Legibility surfaces (round 7): Store/Company link group on a dark-glass chip
+  (`black/45` + blur); both HUD rails get a `#05070c/60` backdrop panel — rule is
+  now *big type on scrims, small type on dark glass*
+- [x] `/lamp` 3D-mode audit (2026-10-17, requested by owner): with a photo loaded the
+  WebGL preview mounts and rebuilds correctly through all 3 sizes × 2 orientations ×
+  3 box finishes and the lamp on/off toggle, no Three.js errors (verified by driving
+  every control in-browser). Crop/zoom/pan feed the preview via a 300 ms debounced
+  512 px texture. *Correction after merging `master` (M17 frame styles landed in
+  parallel):* the configurator now has a frame-style phase — Lamp Box, Classic, Minimal,
+  Vintage, Heart, Celebration (`frameStyles.ts`) — and the preview rebuilds on
+  `frameStyle` too; re-verified all six styles cycle cleanly after the merge.
+  Minor non-blocking notes in `LampPreview3D.tsx`: previous texture isn't disposed on
+  rebuild; `lampOn` is captured inside the texture-load callback (toggle during load
+  can go stale); crop changes rebuild the whole group instead of swapping maps.
+
+- [x] `/lamp` 3D preview studio backdrop (round 8, owner report: "bg so black the black
+  frame is not visible"): preview container `#0a0d14` → radial `#2b3344 → #171c27 →
+  #0c0f16`; scene gets hemisphere fill, key light with PCF soft shadow, cool + warm rim
+  lights, a ground disc catching the contact shadow, and 16 % white edge outlines on the
+  box walls so the Matte Black finish (`#1a1d23`) always separates from the backdrop.
+  Verified in-browser across all finishes/sizes/orientations with no Three.js errors.
+
 - [x] Phone-portrait pass (branch `claude/home-mobile-portrait-view-445a7a`, 2026-10-17) —
   desktop (`md+`) untouched; below `md` the experience gets its own composition:
   - `frontend/components/home/MobileHomeFrame.tsx` — phone chrome: brand + Products /
@@ -106,6 +127,17 @@ This note is mirrored in `README.md` and `PROJECT.md`.
     never parks between two crossfades. Taps / <10 px moves leave the timeline alone.
   - Desktop frame now renders only at `md+` (`useIsPhone` after mount; CSS decides before);
     old `md:hidden` fallbacks removed from `StageScenes.tsx`. Phone landscape not addressed.
+
+## Pending
+
+- [ ] Final owner review of PR #3 (lamp studio preview + merged master) → merge to `master`
+- [ ] Optional: real-device scroll feel check (FPS could not be measured headlessly);
+  remaining suspects if lag persists are per-frame video seeks and backdrop-blur count
+- [ ] Optional: `LampPreview3D` cleanups listed above (texture dispose, stale `lampOn`,
+  map-swap instead of rebuild) — out of this task's scope
+- [x] ~~Decide whether frame styles should become a `/lamp` customisation~~ — landed on
+  `master` as M17 (frame picker + `orders.frame_style`) while this task was in flight
+- [ ] Phone *landscape* orientation not yet addressed (phone-portrait pass covers portrait only)
 
 ## Log
 

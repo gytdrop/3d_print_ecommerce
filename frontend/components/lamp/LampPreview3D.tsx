@@ -66,6 +66,8 @@ export default function LampPreview3D({
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(mount.clientWidth, mount.clientHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -81,13 +83,22 @@ export default function LampPreview3D({
     camera.position.set(0.9, 0.7, 2.6);
     cameraRef.current = camera;
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-    const key = new THREE.DirectionalLight(0xffffff, 1.1);
+    // Studio lighting: hemisphere fill + key with shadow + two rims so a
+    // matte-black box still separates from the dark backdrop.
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    scene.add(new THREE.HemisphereLight(0xdfe7f5, 0x1a1d24, 0.7));
+    const key = new THREE.DirectionalLight(0xffffff, 1.2);
     key.position.set(2.5, 3, 4);
+    key.castShadow = true;
+    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.radius = 4;
     scene.add(key);
-    const rim = new THREE.DirectionalLight(0x99c4ff, 0.35);
-    rim.position.set(-3, 1, -2);
-    scene.add(rim);
+    const rimCool = new THREE.DirectionalLight(0x9fc5ff, 0.9);
+    rimCool.position.set(-3, 1.2, -2);
+    scene.add(rimCool);
+    const rimWarm = new THREE.DirectionalLight(0xffd9a0, 0.55);
+    rimWarm.position.set(3, 0.6, -2.5);
+    scene.add(rimWarm);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -172,7 +183,7 @@ export default function LampPreview3D({
     if (groupRef.current) {
       scene.remove(groupRef.current);
       groupRef.current.traverse((obj) => {
-        if (obj instanceof THREE.Mesh) {
+        if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments) {
           obj.geometry.dispose();
           const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
           mats.forEach((m) => m.dispose());
@@ -285,6 +296,33 @@ export default function LampPreview3D({
     innerLight.position.set(0, 0, isLampBox ? 0 : -0.04);
     group.add(innerLight);
     innerLightRef.current = innerLight;
+
+    // Studio dressing, applied to every frame style: shadows on each body
+    // part and a faint edge outline parented to the mesh (so it follows any
+    // nested transform) — keeps the silhouette readable when the finish is
+    // nearly the same tone as the backdrop (matte black).
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.16 });
+    const bodies: THREE.Mesh[] = [];
+    group.traverse((obj) => {
+      if (obj instanceof THREE.Mesh && obj !== panel && obj.name !== 'lamp-switch') bodies.push(obj);
+    });
+    bodies.forEach((mesh) => {
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry, 30), edgeMat));
+    });
+
+    // Ground disc under the lowest point of whichever frame was built, to
+    // catch the contact shadow and give the object a surface to sit on.
+    const bounds = new THREE.Box3().setFromObject(group);
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(2.4, 48),
+      new THREE.MeshStandardMaterial({ color: 0x1b2130, roughness: 1, metalness: 0 }),
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = bounds.min.y - 0.002;
+    ground.receiveShadow = true;
+    group.add(ground);
 
     scene.add(group);
     groupRef.current = group;

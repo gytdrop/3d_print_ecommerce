@@ -100,3 +100,10 @@ Last updated: 2026-10-17
   - Frame-selection phase after photo upload on `/lamp`: five separately-coded frame styles (`frameStyles.ts`) — Lamp Box, Classic, Minimal, Vintage, Heart (extruded heart border + alpha-masked heart panel). The photo renders as white print with 2.5D depth; the backlight reveals the image. Choice persists on the order (`orders.frame_style`, validated server-side).
   - `/explore` "See it in your space" section: orbitable 3D vignette of the glowing lamp with placement presets (Work Desk / Bedside / Living Shelf), plus an upload CTA that downscales the photo, hands it through sessionStorage, and lands on `/lamp` with the image pre-loaded.
   - Verified in-browser end-to-end: explore upload → auto-loaded in /lamp → all five frames cycle cleanly → heart-frame order placed (frame_style='heart' in DB, STL generated).
+
+### Phase 5: Home Page Visual Redesign (PR #2 — merged 2026-10-17)
+- [x] **M18: Engineering HUD home page** (2026-10-17, see [task2_home.md](task2_home.md)):
+  - Stage cards removed; every stage is an ungrouped, free-positioned scene (`components/home/StageScenes.tsx`) with scrub-reversible per-element drift/stagger choreography.
+  - Blueprint figure rail (left) + live telemetry rail (right) on desktop (`components/hud/EngineeringHudRails.tsx`); stage-matched floating 2.5D product vectors (`components/home/FloatingArt.tsx`). All inline SVG, no external assets (VPS-safe).
+  - Legibility system: local radial scrims + layered text shadows for headline type, dark-glass chips/panels for small type and the rails. Scroll-performance pass: lerp snaps on convergence, quantized state updates, memoized scenes/rails (previously the whole tree re-rendered at 60 fps even while idle).
+- [x] **M19: `/lamp` 3D preview studio backdrop** (2026-10-17): the preview container was near-black (`#0a0d14`) so the Matte Black finish vanished. Radial studio gradient, hemisphere fill, shadow-casting key, cool + warm rims, a ground disc under the measured bounds of whichever frame is built, and faint edge outlines on every body mesh — applied uniformly across all six frame styles.

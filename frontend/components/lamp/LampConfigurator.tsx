@@ -487,7 +487,7 @@ export default function LampConfigurator({
               {lampOn ? 'Lamp On' : 'Lamp Off'}
             </button>
           </div>
-          <div className="h-[320px] rounded-lg bg-[#0a0d14] overflow-hidden">
+          <div className="h-[320px] rounded-lg overflow-hidden bg-[radial-gradient(ellipse_at_50%_30%,#2b3344_0%,#171c27_55%,#0c0f16_100%)]">
             <LampPreview3D
               textureDataUrl={previewTexture}
               size={size}
