@@ -1,7 +1,7 @@
 # Task 2 — Home Page Visual Fill (Engineering HUD)
 
-> Status: **in progress** · Branch: `claude/home-page-visual-design-02688b` · Started: 2026-10-17
-> Reviewed & pushed to GitHub only after owner review.
+> Status: **awaiting final owner review** · Branch: `claude/home-page-visual-design-02688b` · Started: 2026-10-17
+> PR: https://github.com/gytdrop/3d_print_ecommerce/pull/2 (mergeable; master merged in)
 
 ## Problem
 
@@ -74,7 +74,20 @@ This note is mirrored in `README.md` and `PROJECT.md`.
   scroll drift; positions change per stage. Also fixed rails jumping above the
   header (drop-shadow filter made the wrapper a containing block — wrapper is
   now `absolute inset-0`).
-- [ ] Owner review on dev server
+- [x] Merge conflict with master resolved (master's old-card edits superseded by
+  scenes; its new tier sizes 10x8 / 15x10 carried through `PRICING_TIERS`)
+- [x] Directory stage typography settled (round 6): brand + Store + Company on one
+  shared baseline, rigid right-anchored column group with fixed gap, blueprint
+  rule lines above headers, copyright/CTA baseline-aligned, lamp moved below the
+  columns; footer fade window moved to 0.82–0.90 so it no longer interleaves
+  with the pricing fade-out (rails updated to match)
+- [x] Scroll performance pass (round 6): lerp snaps on convergence + UI state
+  quantized to sub-visible steps (was re-rendering the whole tree at 60fps
+  forever, even idle); scenes + rails memoized so hidden stages skip rendering;
+  video still scrubs on the precise unquantized value
+- [x] Docs updated: README key-features section, PROJECT.md code layout,
+  LEDGER.md design language (all described the retired frosted-glass cards)
+- [ ] Final owner review → merge PR #2
 
 ## Log
 

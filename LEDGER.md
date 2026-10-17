@@ -41,7 +41,8 @@ Combines the interactive showcase feel of [`antigravity.google`](https://antigra
 * **Design Philosophy**: Strict adherence to `/no-slop-ui` — no generic neon gradients, no random floating blobs, no illegible low-contrast text.
 * **Color Palette**:
   - **Base Background**: Deep Industrial Space `#050608`
-  - **Glass Containers**: Engineering frosted glass `bg-[#0b0f19]/90 backdrop-blur-xl border border-white/15 ring-1 ring-white/10`
+  - **Content Surfaces (home)**: Cardless — local radial scrims (`rgba(5,6,8,0.88)` core) + layered text shadows over the video; small dark-glass chips `bg-black/45 backdrop-blur-md border-white/20` for badges/metrics
+  - **Warm Lamp Accent**: Lithophane glow `#ffd9a0`/`#ff9d3c` used in the 2.5D floating product art
   - **Primary Accent**: Energetic Forge Orange (`#ff5722` / `from-orange-500 to-amber-500`)
   - **Secondary Accents**: Cyber Cyan (`#22d3ee`) for technical metrics and precision badges
   - **Text Colors**: High-contrast primary `#f8fafc`, muted specs `#94a3b8`
@@ -51,6 +52,7 @@ Combines the interactive showcase feel of [`antigravity.google`](https://antigra
 * **Showcase Scrollytelling Mechanics**:
   - **Zero Vertical Page Displacement**: Fixed viewport pinning (`fixed inset-0 w-screen h-screen overflow-hidden`) locks the outer window. Content containers fade in and out in place without scrolling off screen.
   - **Hardware Frame Scrubbing**: Video frame seeking synchronized directly to scroll delta against All-Intra encoded mechanical assembly footage (`cube_assembly_intra_fast.mp4`).
+  - **Ungrouped Scene Choreography** (2026-10-17): Stage cards decomposed into independent free-positioned elements with scrub-reversible per-element drift/stagger (`opacity^k`), flanked by blueprint/telemetry HUD side rails and stage-matched floating 2.5D product vectors (all inline SVG). See `task2_home.md` for the full decision log.
 
 ---
 
