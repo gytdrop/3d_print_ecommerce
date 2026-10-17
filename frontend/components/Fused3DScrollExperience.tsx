@@ -76,6 +76,21 @@ const PRICING_TIERS: PricingTier[] = [
   { id: 'large', name: 'Large Frame', price: 1299, size: '20x15 cm' },
 ];
 
+/** Blueprint corner brackets + periodic specular sweep framing a content zone. */
+function HudFrame() {
+  return (
+    <>
+      <span aria-hidden className="absolute top-0 left-0 w-5 h-5 border-t border-l border-white/40" />
+      <span aria-hidden className="absolute top-0 right-0 w-5 h-5 border-t border-r border-white/40" />
+      <span aria-hidden className="absolute bottom-0 left-0 w-5 h-5 border-b border-l border-white/40" />
+      <span aria-hidden className="absolute bottom-0 right-0 w-5 h-5 border-b border-r border-white/40" />
+      <span aria-hidden className="absolute top-0 left-6 right-6 h-px overflow-hidden block">
+        <span className="hud-sweep block h-full w-1/3 bg-gradient-to-r from-transparent via-white/70 to-transparent" />
+      </span>
+    </>
+  );
+}
+
 export default function Fused3DScrollExperience() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const targetProgressRef = useRef(0);
@@ -358,25 +373,35 @@ export default function Fused3DScrollExperience() {
                   pointerEvents: opacity > 0.5 ? 'auto' : 'none',
                 }}
               >
-                {/* High-Contrast Engineering Glass Card */}
-                <div className="bg-[#0b0f19]/90 backdrop-blur-xl border border-white/15 rounded-2xl p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.85)] ring-1 ring-white/10">
-                  <div className="flex items-center justify-between pb-3 border-b border-white/10 text-xs text-slate-300 mb-4">
+                {/* Cardless content zone: type sits directly on the video behind a local scrim */}
+                <div className="relative p-6 sm:p-8">
+                  {/* Local scrim — darkens only the text zone, video stays bright around it */}
+                  <div
+                    aria-hidden
+                    className="absolute -inset-10 sm:-inset-14 pointer-events-none"
+                    style={{
+                      background:
+                        'radial-gradient(ellipse at 50% 45%, rgba(5,6,8,0.8) 0%, rgba(5,6,8,0.5) 55%, rgba(5,6,8,0) 78%)',
+                    }}
+                  />
+                  <HudFrame />
+                  <div className="flex items-center justify-between pb-3 border-b border-white/10 text-xs text-slate-300 mb-4 relative">
                     <span className="font-mono text-slate-300 font-medium drop-shadow-sm">{stage.tag}</span>
                     <span className="font-medium text-slate-200 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15 backdrop-blur-sm shadow-sm">
                       {stage.badge}
                     </span>
                   </div>
 
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-white leading-snug drop-shadow-md">
+                  <h1 className="relative text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-white leading-snug [text-shadow:0_2px_12px_rgba(0,0,0,0.9)]">
                     {stage.title}
                   </h1>
 
-                  <p className="mt-3 text-xs sm:text-sm text-slate-200 leading-relaxed font-normal drop-shadow-sm">
+                  <p className="relative mt-3 text-xs sm:text-sm text-slate-200 leading-relaxed font-normal [text-shadow:0_1px_8px_rgba(0,0,0,0.9)]">
                     {stage.desc}
                   </p>
 
-                  {/* Technical Highlight Badges */}
-                  <div className="mt-4 flex flex-wrap gap-2">
+                  {/* Technical Highlight Badges (small glass chips) */}
+                  <div className="relative mt-4 flex flex-wrap gap-2">
                     {stage.highlights.map((item) => (
                       <span
                         key={item}
@@ -387,13 +412,13 @@ export default function Fused3DScrollExperience() {
                     ))}
                   </div>
 
-                  {/* Technical Metric Strip */}
-                  <div className="mt-4 text-[11px] font-mono text-slate-200 bg-black/40 py-2 px-3 rounded-lg border border-white/15 backdrop-blur-md flex items-center justify-between shadow-sm">
+                  {/* Technical Metric Strip (small glass chip) */}
+                  <div className="relative mt-4 text-[11px] font-mono text-slate-200 bg-black/40 py-2 px-3 rounded-lg border border-white/15 backdrop-blur-md flex items-center justify-between shadow-sm">
                     <span className="drop-shadow-sm">{stage.metric}</span>
                     <span className="text-slate-400 font-mono">0{idx + 1} / 06</span>
                   </div>
 
-                  <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
+                  <div className="relative mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
                     <Link
                       href="/explore"
                       className="text-xs font-medium text-slate-200 hover:text-white transition-colors flex items-center gap-1.5 drop-shadow-sm"
@@ -433,7 +458,8 @@ export default function Fused3DScrollExperience() {
               pointerEvents: pricingOpacity > 0.5 ? 'auto' : 'none',
             }}
           >
-            <div className="bg-[#0b0f19]/90 backdrop-blur-xl border border-white/15 rounded-2xl p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.85)] ring-1 ring-white/10">
+            <div className="relative bg-[#0b0f19]/55 backdrop-blur-md border border-white/15 rounded-2xl p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
+              <HudFrame />
               <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-white drop-shadow-sm">Select Frame Dimensions</h2>
@@ -516,7 +542,8 @@ export default function Fused3DScrollExperience() {
               pointerEvents: footerOpacity > 0.5 ? 'auto' : 'none',
             }}
           >
-            <div className="bg-[#0b0f19]/90 backdrop-blur-xl border border-white/15 rounded-2xl p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.85)] ring-1 ring-white/10">
+            <div className="relative bg-[#0b0f19]/55 backdrop-blur-md border border-white/15 rounded-2xl p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
+              <HudFrame />
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-white/10">
                 {/* Brand Column */}
                 <div className="md:col-span-2 space-y-3">

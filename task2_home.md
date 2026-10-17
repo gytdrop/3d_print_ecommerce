@@ -48,8 +48,13 @@ This note is mirrored in `README.md` and `PROJECT.md`.
     - Status ticks: layer res, material, LED temp, dispatch window
 - [x] Wire rails into `Fused3DScrollExperience` (driven by `scrollProgress` / `activeStepIndex`)
 - [x] Verify: `next build` clean, no console errors, stage crossfades in sync with cards
+- [x] Hybrid cardless pass (owner choice, 2026-10-17 round 2):
+  - Stages 01–04: glass box removed — type sits directly on the video behind a local
+    radial scrim; badges / metric strip / CTAs remain as small glass chips
+  - HUD corner brackets + periodic specular edge sweep (`HudFrame`) on all content zones
+  - Pricing & footer panels: clearer glass (55% fill, `backdrop-blur-md`)
+- [x] PR opened: https://github.com/gytdrop/3d_print_ecommerce/pull/2
 - [ ] Owner review on dev server
-- [ ] Push to GitHub after review approval
 
 ## Log
 

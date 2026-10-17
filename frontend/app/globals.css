@@ -256,3 +256,12 @@ body {
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+/* ─── Home HUD: specular edge sweep ──────────────────────────────────────── */
+@keyframes hud-sweep {
+  0%, 45%   { transform: translateX(-110%); }
+  75%, 100% { transform: translateX(310%); }
+}
+.hud-sweep {
+  animation: hud-sweep 7s ease-in-out infinite;
+}
