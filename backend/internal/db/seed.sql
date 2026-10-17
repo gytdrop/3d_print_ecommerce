@@ -67,6 +67,7 @@ ON CONFLICT (id) DO UPDATE SET
 
 -- 5. Catalog Products
 INSERT INTO products (id, category_id, name, slug, description, base_price, image_url, material_default, tag, tag_variant, is_active) VALUES
+('photo-lamp-frame', 'frames', 'Photo Lamp Frame', 'photo-lamp-frame', 'Your photo 3D-printed as a glowing lithophane panel, seated in a cuboidal LED lamp box with slide-in rails and a warm-white USB-C light engine.', 499.00, '/frames/classic_frame.png', 'pla', 'New', 'badge-cyan', true),
 ('classic-lithophane', 'frames', 'Classic Lithophane Frame', 'classic-lithophane-frame', 'Signature rectangular frame with precision 3D-etched backlight layout.', 299.00, '/frames/classic_frame.png', 'pla', 'Bestseller', 'badge-accent', true),
 ('heart-shaped-memory', 'frames', 'Heart-Shaped Memory Frame', 'heart-shaped-memory-frame', 'Romantic heart-profile frame designed for couples and anniversaries.', 349.00, '/frames/heart_frame.png', 'pla', 'Romantic', 'badge-cyan', true),
 ('ornate-vintage-border', 'frames', 'Ornate Vintage Border Frame', 'ornate-vintage-border-frame', 'Elegant frame styled with classic historical relief patterns and textured borders.', 399.00, '/frames/vintage_frame.png', 'pla', 'Elegant', 'badge-accent', true),

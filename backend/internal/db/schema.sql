@@ -140,6 +140,18 @@ CREATE TABLE IF NOT EXISTS payments (
 
 CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(order_id);
 
+-- 10. Photo Lamp Frame columns on orders (product_type-aware orders).
+-- ALTERs are idempotent so existing databases pick up the new columns on boot.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS product_type VARCHAR(20) NOT NULL DEFAULT 'stl';
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS lamp_size VARCHAR(10);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS lamp_orientation VARCHAR(10);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS lamp_box_color VARCHAR(20);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS photo_url VARCHAR(1024);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS generated_stl_url VARCHAR(1024);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS stl_generation_status VARCHAR(20);
+
+CREATE INDEX IF NOT EXISTS idx_orders_product_type ON orders(product_type);
+
 -- Trigger for auto-updating updated_at timestamp
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$

@@ -25,6 +25,7 @@ func main() {
 	mux.HandleFunc("/api/pincodes/check", handlers.HandlePincodeCheck)
 	mux.HandleFunc("/api/quote", handlers.HandleQuote)
 	mux.HandleFunc("/api/orders", handlers.HandleOrders)
+	mux.HandleFunc("/api/uploads/photo", handlers.HandlePhotoUpload)
 	mux.HandleFunc("/api/orders/track", handlers.HandleOrderTracking)
 	mux.HandleFunc("/api/products", handlers.HandleProducts)
 	mux.HandleFunc("/api/materials", handlers.HandleMaterials)

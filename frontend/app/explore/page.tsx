@@ -63,6 +63,18 @@ const categoryGradients: Record<Exclude<CategoryId, 'all'>, string> = {
 const products: Product[] = [
   /* Frames */
   {
+    id: 'photo-lamp-frame',
+    name: 'Photo Lamp Frame',
+    description: 'Your photo 3D-printed as a glowing lithophane panel in a cuboidal LED lamp box with slide-in rails and warm-white USB-C light engine.',
+    image: '/frames/classic_frame.png',
+    category: 'frames',
+    material: 'PLA',
+    price: '₹499',
+    tag: 'New',
+    tagVariant: 'badge-cyan',
+    isNew: true,
+  },
+  {
     id: 'classic-lithophane',
     name: 'Classic Lithophane Frame',
     description: 'Signature rectangular frame with precision 3D-etched backlight layout.',
@@ -375,7 +387,7 @@ export default function ExplorePage() {
                     </div>
 
                     <Link
-                      href="/upload"
+                      href={product.id === 'photo-lamp-frame' ? '/lamp' : '/upload'}
                       className="w-full text-center btn-ghost text-xs md:text-sm py-1.5 md:py-2 px-2 hover:bg-[var(--bg-accent)] hover:text-[var(--text-on-accent)] hover:border-transparent transition-all block"
                     >
                       Customize &amp; Order

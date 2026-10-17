@@ -78,4 +78,10 @@ Last updated: 2026-10-17
 
 ### Phase 3: Photo Lamp Frame Product
 - [x] **M13: Photo Lamp Frame PRD** (2026-10-17): Full product spec written and approved — see [photo-lamp-spec.md](photo-lamp-spec.md). Covers the `/lamp` flow (photo import → crop → live backlit 3D preview → order), server-side lithophane STL generation, fixed 3-size matrix pricing, and reuse of the existing orders/tracking spine.
-- [ ] **M14: `/lamp` Implementation (P0 scope)**: Frontend configurator + preview, Go STL generation, orders schema extension (`product_type = 'photo_lamp'`), homepage Stage 05 CTA and `/explore` entry points. Blocked on LED module measurements and panel thickness validation (see spec Open Questions).
+- [x] **M14: `/lamp` Implementation (P0 scope)** (2026-10-17):
+  - Frontend: `/lamp` configurator (photo import with type/size/resolution validation, aspect-locked crop with drag + zoom, size/orientation/box-color selection, live Three.js lamp preview with on/off backlight toggle, pincode-gated delivery tiers, order placement + tracking link).
+  - Backend: `POST /api/uploads/photo` (15MB JPEG/PNG multipart), `service.CalculateLampQuote` flat matrix pricing, `internal/lithophane` image→watertight binary STL generator (0.8–2.8mm relief, 512-sample grid), async generation after order placement with success/failure recorded on the order + timeline.
+  - Schema: idempotent `orders` columns (`product_type`, `lamp_size`, `lamp_orientation`, `lamp_box_color`, `photo_url`, `generated_stl_url`, `stl_generation_status`); `photo-lamp-frame` catalog seed.
+  - Entry points: homepage Stage 05 size CTAs → `/lamp?size=…`; featured `/explore` card → `/lamp`.
+  - Verified: Go unit tests pass, `npm run build` clean, end-to-end order flow tested against a live PostgreSQL instance (photo upload → ₹699 eco order → 35MB STL generated + timeline event; express/eco pricing and legacy STL orders confirmed intact).
+  - Still open before first production print: LED module measurements (box depth/rails) and panel thickness glow validation (spec Open Questions 1–2).
