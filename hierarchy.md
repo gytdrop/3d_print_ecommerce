@@ -10,6 +10,7 @@ techazsure/
     ├── hierarchy.md                 # System file and component hierarchy map
     ├── install.md                   # Environment, dependency & Docker install guide
     ├── progress.md                  # Milestone status & completion tracker
+    ├── photo-lamp-spec.md           # PRD for the Photo Lamp Frame product (/lamp)
     ├── docker-compose.yml           # Production multi-container orchestration
     ├── .env.docker                  # Docker compose environment variables
     │

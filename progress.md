@@ -75,3 +75,7 @@ Last updated: 2026-10-17
    - Web interface (`/admin/dispatch`) for printing farm operators to transition orders through slicing, extrusion, QC, and courier handoff.
 4. **Production Domain & SSL**:
    - Provision automated Let's Encrypt SSL/TLS certificates on Port 443 via Nginx Certbot.
+
+### Phase 3: Photo Lamp Frame Product
+- [x] **M13: Photo Lamp Frame PRD** (2026-10-17): Full product spec written and approved — see [photo-lamp-spec.md](photo-lamp-spec.md). Covers the `/lamp` flow (photo import → crop → live backlit 3D preview → order), server-side lithophane STL generation, fixed 3-size matrix pricing, and reuse of the existing orders/tracking spine.
+- [ ] **M14: `/lamp` Implementation (P0 scope)**: Frontend configurator + preview, Go STL generation, orders schema extension (`product_type = 'photo_lamp'`), homepage Stage 05 CTA and `/explore` entry points. Blocked on LED module measurements and panel thickness validation (see spec Open Questions).
