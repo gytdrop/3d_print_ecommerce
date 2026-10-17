@@ -1,5 +1,7 @@
 'use client';
 
+import { memo } from 'react';
+
 /**
  * EngineeringHudRails
  * Decorative blueprint-style side rails that flank the center stage card on the
@@ -56,9 +58,9 @@ function stageOpacity(stageIndex: number, p: number): number {
     if (p <= 0.76) return 1;
     return 1 - (p - 0.76) / 0.06;
   }
-  // stage 5: footer
-  if (p < 0.78) return 0;
-  if (p < 0.86) return (p - 0.78) / 0.08;
+  // stage 5: footer — starts after pricing has fully cleared
+  if (p < 0.82) return 0;
+  if (p < 0.90) return (p - 0.82) / 0.08;
   return 1;
 }
 
@@ -406,7 +408,7 @@ const READOUTS: Array<{ title: string; rows: Array<[string, string]> }> = [
   },
 ];
 
-export default function EngineeringHudRails({ scrollProgress, activeStepIndex }: HudProps) {
+function EngineeringHudRails({ scrollProgress, activeStepIndex }: HudProps) {
   const pct = Math.round(scrollProgress * 100);
 
   return (
@@ -520,3 +522,7 @@ export default function EngineeringHudRails({ scrollProgress, activeStepIndex }:
     </div>
   );
 }
+
+/* Memoized: scrollProgress is quantized upstream, so idle frames and
+   sub-visible changes skip re-rendering the rail SVG tree entirely. */
+export default memo(EngineeringHudRails);

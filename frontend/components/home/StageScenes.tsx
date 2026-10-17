@@ -13,7 +13,7 @@
  * keyframe delays, which cannot reverse with a scrub.
  */
 
-import type { ComponentType } from 'react';
+import { memo, type ComponentType } from 'react';
 import Link from 'next/link';
 import { Upload, ArrowRight, Shield, Clock, MapPin, Mail } from 'lucide-react';
 import { siteContent } from '@/config/siteContent';
@@ -81,7 +81,9 @@ const STAGE_FLOATS: Record<string, { main: ComponentType<ArtProps>; alt: Compone
   '04': { main: ParcelArt, alt: LampArt },
 };
 
-export function SpecStageScene({ stage, o }: { stage: SpecStage; o: number }) {
+/* Scenes are memoized: while a stage is hidden its `o` stays 0, so the memo
+   skips re-rendering 5 of the 6 scenes on every scroll frame. */
+export const SpecStageScene = memo(function SpecStageScene({ stage, o }: { stage: SpecStage; o: number }) {
   const floats = STAGE_FLOATS[stage.step];
   return (
     <>
@@ -226,11 +228,11 @@ export function SpecStageScene({ stage, o }: { stage: SpecStage; o: number }) {
       </div>
     </>
   );
-}
+});
 
 /* ─── Stage 05: pricing scene ────────────────────────────────────────────── */
 
-export function PricingScene({ o, tiers }: { o: number; tiers: PricingTier[] }) {
+export const PricingScene = memo(function PricingScene({ o, tiers }: { o: number; tiers: PricingTier[] }) {
   // Explicit scatter positions: left / raised middle / right
   const POS = ['left-0 top-[34%]', 'left-[34.5%] top-[22%]', 'right-0 top-[38%]'];
   return (
@@ -360,11 +362,11 @@ export function PricingScene({ o, tiers }: { o: number; tiers: PricingTier[] }) 
       </div>
     </>
   );
-}
+});
 
 /* ─── Stage 06: directory / footer scene ─────────────────────────────────── */
 
-export function FooterScene({ o }: { o: number }) {
+export const FooterScene = memo(function FooterScene({ o }: { o: number }) {
   const year = new Date().getFullYear();
   return (
     <>
@@ -381,7 +383,7 @@ export function FooterScene({ o }: { o: number }) {
         />
 
         {/* Floating glowing lamp — the product, as the closing image */}
-        <div className="absolute right-[3%] top-[42%] w-28 lg:w-32 pointer-events-none" style={drift(o, 1.5, 28, 20)}>
+        <div className="absolute right-[2%] top-[52%] w-28 lg:w-32 pointer-events-none" style={drift(o, 1.5, 28, 20)}>
           <div className="hud-float">
             <LampArt id="ffoot" />
           </div>
@@ -389,6 +391,7 @@ export function FooterScene({ o }: { o: number }) {
 
         {/* Brand block — from the left */}
         <div className="absolute left-0 top-[14%] max-w-sm" style={drift(o, 1, -30, 0)}>
+          <span className="block w-8 border-t border-white/40 mb-2" />
           <div className={`text-2xl font-semibold text-white tracking-tight ${TS}`}>TechAZsure 3D Print</div>
           <p className={`mt-3 text-sm text-slate-100 leading-relaxed ${TS_SM}`}>{siteContent.footer.description}</p>
           <div className={`mt-4 flex items-center gap-5 text-xs text-slate-200 ${TS_SM}`}>
@@ -406,50 +409,57 @@ export function FooterScene({ o }: { o: number }) {
           </div>
         </div>
 
-        {/* Store column — drops in from above */}
-        <div className="absolute right-[24%] top-[16%] space-y-2.5" style={drift(o, 1.3, 0, -26)}>
-          <div className={`text-xs font-semibold text-white uppercase tracking-wider ${TS_SM}`}>Store</div>
-          <ul className={`space-y-2 text-xs text-slate-200 ${TS_SM}`}>
-            <li>
-              <Link href="/explore" className="hover:text-white transition-colors">
-                All Products
-              </Link>
-            </li>
-            <li>
-              <Link href="/upload" className="hover:text-white transition-colors">
-                Custom STL Upload
-              </Link>
-            </li>
-            <li>
-              <Link href="/zones" className="hover:text-white transition-colors">
-                Delivery Zones
-              </Link>
-            </li>
-          </ul>
+        {/* Link columns — rigid right-anchored group, shared baseline with brand */}
+        <div className="absolute right-0 top-[14%] flex gap-14">
+          <div className="space-y-2.5" style={drift(o, 1.3, 0, -26)}>
+            <div className={`text-xs font-semibold text-white uppercase tracking-wider ${TS_SM}`}>
+              <span className="block w-8 border-t border-white/40 mb-2" />
+              Store
+            </div>
+            <ul className={`space-y-2 text-xs text-slate-200 ${TS_SM}`}>
+              <li>
+                <Link href="/explore" className="hover:text-white transition-colors">
+                  All Products
+                </Link>
+              </li>
+              <li>
+                <Link href="/upload" className="hover:text-white transition-colors">
+                  Custom STL Upload
+                </Link>
+              </li>
+              <li>
+                <Link href="/zones" className="hover:text-white transition-colors">
+                  Delivery Zones
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="space-y-2.5" style={drift(o, 1.5, 26, 0)}>
+            <div className={`text-xs font-semibold text-white uppercase tracking-wider ${TS_SM}`}>
+              <span className="block w-8 border-t border-white/40 mb-2" />
+              Company
+            </div>
+            <ul className={`space-y-2 text-xs text-slate-200 ${TS_SM}`}>
+              <li>
+                <Link href="/about" className="hover:text-white transition-colors">
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <a
+                  href={`tel:${siteContent.footer.phone.replace(/\s+/g, '')}`}
+                  className="hover:text-white transition-colors"
+                >
+                  Support
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
 
-        {/* Company column — from the right */}
-        <div className="absolute right-0 top-[16%] space-y-2.5" style={drift(o, 1.5, 26, 0)}>
-          <div className={`text-xs font-semibold text-white uppercase tracking-wider ${TS_SM}`}>Company</div>
-          <ul className={`space-y-2 text-xs text-slate-200 ${TS_SM}`}>
-            <li>
-              <Link href="/about" className="hover:text-white transition-colors">
-                About Us
-              </Link>
-            </li>
-            <li>
-              <a
-                href={`tel:${siteContent.footer.phone.replace(/\s+/g, '')}`}
-                className="hover:text-white transition-colors"
-              >
-                Support
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        {/* Copyright — rises from the bottom */}
-        <div className={`absolute left-0 bottom-0 text-xs text-slate-300 ${TS_SM}`} style={drift(o, 1.7, 0, 20)}>
+        {/* Copyright — rises from the bottom, baseline-aligned with the CTA */}
+        <div className={`absolute left-0 bottom-2 text-xs text-slate-300 ${TS_SM}`} style={drift(o, 1.7, 0, 20)}>
           © {year} TechAZsure Technologies Pvt. Ltd. All rights reserved.
         </div>
 
@@ -485,4 +495,4 @@ export function FooterScene({ o }: { o: number }) {
       </div>
     </>
   );
-}
+});

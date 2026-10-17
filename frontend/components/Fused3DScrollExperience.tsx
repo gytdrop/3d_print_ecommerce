@@ -62,6 +62,7 @@ export default function Fused3DScrollExperience() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const targetProgressRef = useRef(0);
   const currentProgressRef = useRef(0);
+  const lastUiProgressRef = useRef(0);
   const [scrollProgress, setScrollProgress] = useState(0);
 
   // Derive activeStepIndex directly from scrollProgress for 100% sync
@@ -163,9 +164,20 @@ export default function Fused3DScrollExperience() {
     const loop = () => {
       const current = currentProgressRef.current;
       const target = targetProgressRef.current;
-      const next = current + (target - current) * lerpFactor;
+      let next = current + (target - current) * lerpFactor;
+      // Snap when converged — the lerp otherwise approaches the target forever,
+      // producing a new float (and a full React re-render) on every frame even
+      // while idle.
+      if (Math.abs(target - next) < 0.0004) next = target;
       currentProgressRef.current = next;
-      setScrollProgress(next);
+
+      // Quantize the UI state to sub-visible steps so React only re-renders on
+      // actual visual change; the video keeps seeking on the precise value.
+      const ui = Math.round(next * 2000) / 2000;
+      if (ui !== lastUiProgressRef.current) {
+        lastUiProgressRef.current = ui;
+        setScrollProgress(ui);
+      }
 
       if (video && video.duration && !isNaN(video.duration)) {
         const targetTime = next * video.duration;
@@ -232,10 +244,10 @@ export default function Fused3DScrollExperience() {
     return 1 - (scrollProgress - 0.76) / 0.06;
   };
 
-  // Directory & Footer (0.78 -> 1.00)
+  // Directory & Footer (0.82 -> 1.00) — starts after pricing has fully cleared
   const getFooterOpacity = () => {
-    if (scrollProgress < 0.78) return 0;
-    if (scrollProgress < 0.86) return (scrollProgress - 0.78) / 0.08;
+    if (scrollProgress < 0.82) return 0;
+    if (scrollProgress < 0.90) return (scrollProgress - 0.82) / 0.08;
     return 1;
   };
 
