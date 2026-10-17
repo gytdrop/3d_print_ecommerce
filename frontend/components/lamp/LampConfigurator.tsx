@@ -27,7 +27,7 @@ interface ServerLampConfig {
   rush_surcharge_rate: number;
 }
 
-import { FRAME_STYLES, type FrameStyleId } from './frameStyles';
+import { FRAME_STYLES, isFrameStyleId, type FrameStyleId } from './frameStyles';
 
 const LampPreview3D = dynamic(() => import('./LampPreview3D'), { ssr: false });
 
@@ -51,13 +51,21 @@ const DELIVERY_TIERS: { id: LampDeliveryTier; label: string; eta: string; needsE
   { id: 'budget-5-7d', label: 'Budget Eco', eta: '5–7 days · ₹100 off' },
 ];
 
-export default function LampConfigurator({ initialSize }: { initialSize?: string }) {
+export default function LampConfigurator({
+  initialSize,
+  initialFrame,
+}: {
+  initialSize?: string;
+  initialFrame?: string;
+}) {
   // ── Configuration state ────────────────────────────────────────────────────
   const validInitial = (['small', 'medium', 'large'] as const).find((s) => s === initialSize);
   const [size, setSize] = useState<LampSizeId>(validInitial ?? 'medium');
   const [orientation, setOrientation] = useState<LampOrientation>('landscape');
   const [boxColor, setBoxColor] = useState<LampBoxColor>('black');
-  const [frameStyle, setFrameStyle] = useState<FrameStyleId>('lamp-box');
+  const [frameStyle, setFrameStyle] = useState<FrameStyleId>(
+    isFrameStyleId(initialFrame) ? initialFrame : 'lamp-box',
+  );
   const [lampOn, setLampOn] = useState(true);
 
   // ── Photo + crop state ─────────────────────────────────────────────────────

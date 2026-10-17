@@ -7,7 +7,7 @@
 
 import * as THREE from 'three';
 
-export type FrameStyleId = 'lamp-box' | 'classic' | 'minimal' | 'vintage' | 'heart';
+export type FrameStyleId = 'lamp-box' | 'classic' | 'minimal' | 'vintage' | 'heart' | 'celebration';
 
 export interface FrameStyleDef {
   id: FrameStyleId;
@@ -21,7 +21,23 @@ export const FRAME_STYLES: FrameStyleDef[] = [
   { id: 'minimal', label: 'Minimal', description: 'Thin borderless gallery frame' },
   { id: 'vintage', label: 'Vintage', description: 'Deep double-border frame' },
   { id: 'heart', label: 'Heart', description: 'Heart-shaped backlit panel' },
+  { id: 'celebration', label: 'Celebration', description: 'Festive embossed stud border' },
 ];
+
+/** Maps /explore catalog frame products onto configurator frame styles —
+ *  every catalog frame opens the customizer with its style pre-selected. */
+export const FRAME_STYLE_BY_PRODUCT: Record<string, FrameStyleId> = {
+  'photo-lamp-frame': 'lamp-box',
+  'classic-lithophane': 'classic',
+  'heart-shaped-memory': 'heart',
+  'ornate-vintage-border': 'vintage',
+  'sleek-minimalist-gallery': 'minimal',
+  'embossed-celebration': 'celebration',
+};
+
+export function isFrameStyleId(value: string | undefined): value is FrameStyleId {
+  return !!value && FRAME_STYLES.some((f) => f.id === value);
+}
 
 /** Standard material for frame bodies in the chosen finish. */
 function frameMaterial(colorHex: string, walnut: boolean): THREE.MeshStandardMaterial {
@@ -140,6 +156,37 @@ export function buildFrameStyle(
     case 'minimal':
       buildRectBorder(group, w, h, 0.035, 0.08, mat);
       break;
+
+    case 'celebration': {
+      buildRectBorder(group, w, h, 0.11, 0.15, mat);
+      // Festive embossed studs spaced along the border.
+      const studMat = new THREE.MeshStandardMaterial({
+        color: 0xd4a24a,
+        roughness: 0.35,
+        metalness: 0.5,
+      });
+      const studGeo = new THREE.SphereGeometry(0.028, 12, 10);
+      const bw = (w + 0.22) / 2; // stud track: center of the border
+      const bh = (h + 0.22) / 2;
+      const addStud = (x: number, y: number) => {
+        const stud = new THREE.Mesh(studGeo, studMat);
+        stud.position.set(x, y, 0.085);
+        group.add(stud);
+      };
+      const stepsX = Math.max(3, Math.round(w / 0.3));
+      const stepsY = Math.max(2, Math.round(h / 0.3));
+      for (let i = 0; i <= stepsX; i++) {
+        const x = -bw + (2 * bw * i) / stepsX;
+        addStud(x, bh);
+        addStud(x, -bh);
+      }
+      for (let i = 1; i < stepsY; i++) {
+        const y = -bh + (2 * bh * i) / stepsY;
+        addStud(-bw, y);
+        addStud(bw, y);
+      }
+      break;
+    }
 
     case 'vintage': {
       buildRectBorder(group, w, h, 0.14, 0.18, mat);

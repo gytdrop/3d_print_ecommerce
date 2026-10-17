@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Upload, Filter, Box, LayoutGrid, Sparkles, Frame, Star, Home, Gem, KeyRound, Monitor, Building2, Loader2 } from 'lucide-react';
 import { PLACEMENTS, type PlacementId } from '@/components/explore/ExploreShowcase3D';
 import { PENDING_PHOTO_KEY } from '@/components/lamp/lampConfig';
+import { FRAME_STYLE_BY_PRODUCT } from '@/components/lamp/frameStyles';
 
 const ExploreShowcase3D = dynamic(() => import('@/components/explore/ExploreShowcase3D'), { ssr: false });
 
@@ -505,7 +506,11 @@ export default function ExplorePage() {
                     </div>
 
                     <Link
-                      href={product.id === 'photo-lamp-frame' ? '/lamp' : '/upload'}
+                      href={
+                        FRAME_STYLE_BY_PRODUCT[product.id]
+                          ? `/lamp?frame=${FRAME_STYLE_BY_PRODUCT[product.id]}`
+                          : '/upload'
+                      }
                       className="w-full text-center btn-ghost text-xs md:text-sm py-1.5 md:py-2 px-2 hover:bg-[var(--bg-accent)] hover:text-[var(--text-on-accent)] hover:border-transparent transition-all block"
                     >
                       Customize &amp; Order

@@ -119,7 +119,7 @@ func validateLampOrder(req *OrderRequest) (photoPath string, errMsg string) {
 		req.FrameStyle = "lamp-box"
 	}
 	if !service.LampFrameStyles[req.FrameStyle] {
-		return "", "frame_style must be lamp-box, classic, minimal, vintage, or heart"
+		return "", "frame_style must be lamp-box, classic, minimal, vintage, heart, or celebration"
 	}
 	const prefix = "/uploads/photos/"
 	if !strings.HasPrefix(req.PhotoURL, prefix) {
