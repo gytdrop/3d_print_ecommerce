@@ -408,19 +408,11 @@ const READOUTS: Array<{ title: string; rows: Array<[string, string]> }> = [
 
 export default function EngineeringHudRails({ scrollProgress, activeStepIndex }: HudProps) {
   const pct = Math.round(scrollProgress * 100);
-  // Stages 05 (pricing) and 06 (footer) use wider cards that reach into the
-  // rail zone — recede the rails so the overlap reads as depth, not collision.
-  const receded = activeStepIndex >= 4;
-  const recedeStyle = (dir: 1 | -1) => ({
-    opacity: receded ? 0.35 : 1,
-    transform: `translateY(-50%) translateX(${receded ? dir * 14 : 0}px)`,
-    transition: 'opacity 700ms ease, transform 700ms ease',
-  });
 
   return (
     <div aria-hidden="true" className="hidden xl:block pointer-events-none select-none">
       {/* ─── Left rail: per-stage blueprint diagram ─── */}
-      <div className="absolute left-0 top-1/2 w-52 2xl:w-60" style={recedeStyle(-1)}>
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-52 2xl:w-60">
         <div className="border-l border-t border-white/10 rounded-tl-xl pl-4 pt-3 pr-2">
           <div className="flex items-center gap-2 mb-1">
             <span className="w-1 h-1 rounded-full bg-white/60" />
@@ -450,7 +442,7 @@ export default function EngineeringHudRails({ scrollProgress, activeStepIndex }:
       </div>
 
       {/* ─── Right rail: telemetry column ─── */}
-      <div className="absolute right-0 top-1/2 w-44 2xl:w-48 flex items-stretch justify-end gap-3" style={recedeStyle(1)}>
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-44 2xl:w-48 flex items-stretch justify-end gap-3">
         {/* readout panel */}
         <div className="flex flex-col justify-between border-r border-t border-white/10 rounded-tr-xl pr-4 pt-3 pl-2 min-h-[320px]">
           <div>

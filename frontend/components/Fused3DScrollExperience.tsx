@@ -2,28 +2,18 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { 
-  Upload, 
-  ArrowRight,
-  Shield,
-  Clock,
-  MapPin,
-  Mail
-} from 'lucide-react';
-import { siteContent } from '@/config/siteContent';
+import { Upload } from 'lucide-react';
 import EngineeringHudRails from '@/components/hud/EngineeringHudRails';
+import {
+  SpecStageScene,
+  PricingScene,
+  FooterScene,
+  HudFrame,
+  type SpecStage,
+  type PricingTier,
+} from '@/components/home/StageScenes';
 
-interface StageInfo {
-  step: string;
-  badge: string;
-  tag: string;
-  title: string;
-  desc: string;
-  metric: string;
-  highlights: string[];
-}
-
-const STAGES: StageInfo[] = [
+const STAGES: SpecStage[] = [
   {
     step: '01',
     badge: 'Hardware Architecture',
@@ -62,34 +52,11 @@ const STAGES: StageInfo[] = [
   },
 ];
 
-interface PricingTier {
-  id: string;
-  name: string;
-  price: number;
-  size: string;
-  popular?: boolean;
-}
-
 const PRICING_TIERS: PricingTier[] = [
   { id: 'small', name: 'Small Frame', price: 499, size: '10x7.5 cm' },
   { id: 'medium', name: 'Medium Frame', price: 799, size: '15x11.2 cm', popular: true },
   { id: 'large', name: 'Large Frame', price: 1299, size: '20x15 cm' },
 ];
-
-/** Blueprint corner brackets + periodic specular sweep framing a content zone. */
-function HudFrame() {
-  return (
-    <>
-      <span aria-hidden className="absolute top-0 left-0 w-5 h-5 border-t border-l border-white/40" />
-      <span aria-hidden className="absolute top-0 right-0 w-5 h-5 border-t border-r border-white/40" />
-      <span aria-hidden className="absolute bottom-0 left-0 w-5 h-5 border-b border-l border-white/40" />
-      <span aria-hidden className="absolute bottom-0 right-0 w-5 h-5 border-b border-r border-white/40" />
-      <span aria-hidden className="absolute top-0 left-6 right-6 h-px overflow-hidden block">
-        <span className="hud-sweep block h-full w-1/3 bg-gradient-to-r from-transparent via-white/70 to-transparent" />
-      </span>
-    </>
-  );
-}
 
 export default function Fused3DScrollExperience() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -282,7 +249,7 @@ export default function Fused3DScrollExperience() {
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-[#050608] text-[#f8fafc] font-sans antialiased selection:bg-slate-700 selection:text-white select-none">
-      
+
       {/* ─── Pinned 3D Mechanical Video Background (Zero Lag All-Intra) ─── */}
       <div className="absolute inset-0 w-full h-full pointer-events-none z-0 overflow-hidden bg-[#050608]">
         <video
@@ -304,7 +271,7 @@ export default function Fused3DScrollExperience() {
         />
 
         {/* Minimal Engineering Dot Grid */}
-        <div 
+        <div
           className="absolute inset-0 pointer-events-none opacity-15"
           style={{
             backgroundImage: 'radial-gradient(rgba(255, 255, 255, 0.25) 1px, transparent 1px)',
@@ -315,7 +282,7 @@ export default function Fused3DScrollExperience() {
 
       {/* ─── Fixed Viewport Frame: Never scrolls off screen ─── */}
       <div className="absolute inset-0 w-full h-full z-20 flex flex-col justify-between pointer-events-none p-4 sm:p-8 md:p-10">
-        
+
         {/* Top Clean Header (antigravity.google style) */}
         <header className="w-full max-w-6xl mx-auto flex items-center justify-between pointer-events-auto border-b border-white/10 pb-4">
           <Link href="/" className="flex items-center gap-2.5 group" aria-label="TechAZsure Home">
@@ -328,7 +295,7 @@ export default function Fused3DScrollExperience() {
             <span className="text-white/20">/</span>
             <span className="text-xs text-slate-300 font-normal">Showcase</span>
           </Link>
-          
+
           <nav className="flex items-center gap-6 text-xs font-medium">
             <Link
               href="/explore"
@@ -352,250 +319,63 @@ export default function Fused3DScrollExperience() {
           </nav>
         </header>
 
-        {/* Center Stage: All stages fade in/out in the exact same coordinates */}
-        <div className="w-full max-w-6xl mx-auto my-auto relative min-h-[380px] flex items-center justify-center">
+        {/* Center Stage: ungrouped scene compositions, all in the same coordinates */}
+        <div className="w-full max-w-6xl mx-auto my-auto relative min-h-[380px] md:h-[min(62vh,560px)]">
 
           {/* Engineering HUD side rails (decorative, desktop only) */}
           <EngineeringHudRails scrollProgress={scrollProgress} activeStepIndex={activeStepIndex} />
 
-          {/* ─── Stages 01 to 04: Product Capabilities (Transparent Frosted Glass) ─── */}
-          {STAGES.map((stage, idx) => {
-            const opacity = getStageOpacity(idx);
-            const isVisible = opacity > 0.04;
+          {/* Scene zone — reserves rail space on xl+, framed by HUD brackets */}
+          <div className="absolute inset-0 xl:left-56 xl:right-56 2xl:left-64 2xl:right-60">
+            <HudFrame />
 
-            return (
-              <div
-                key={stage.step}
-                className="absolute inset-x-0 mx-auto max-w-xl"
-                style={{
-                  opacity: opacity,
-                  visibility: opacity > 0.01 ? 'visible' : 'hidden',
-                  pointerEvents: opacity > 0.5 ? 'auto' : 'none',
-                }}
-              >
-                {/* Cardless content zone: type sits directly on the video behind a local scrim */}
-                <div className="relative p-6 sm:p-8">
-                  {/* Local scrim — darkens only the text zone, video stays bright around it */}
-                  <div
-                    aria-hidden
-                    className="absolute -inset-10 sm:-inset-14 pointer-events-none"
-                    style={{
-                      background:
-                        'radial-gradient(ellipse at 50% 45%, rgba(5,6,8,0.8) 0%, rgba(5,6,8,0.5) 55%, rgba(5,6,8,0) 78%)',
-                    }}
-                  />
-                  <HudFrame />
-                  <div className="flex items-center justify-between pb-3 border-b border-white/10 text-xs text-slate-300 mb-4 relative">
-                    <span className="font-mono text-slate-300 font-medium drop-shadow-sm">{stage.tag}</span>
-                    <span className="font-medium text-slate-200 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15 backdrop-blur-sm shadow-sm">
-                      {stage.badge}
-                    </span>
-                  </div>
-
-                  <h1 className="relative text-xl sm:text-2xl md:text-3xl font-semibold tracking-tight text-white leading-snug [text-shadow:0_2px_12px_rgba(0,0,0,0.9)]">
-                    {stage.title}
-                  </h1>
-
-                  <p className="relative mt-3 text-xs sm:text-sm text-slate-200 leading-relaxed font-normal [text-shadow:0_1px_8px_rgba(0,0,0,0.9)]">
-                    {stage.desc}
-                  </p>
-
-                  {/* Technical Highlight Badges (small glass chips) */}
-                  <div className="relative mt-4 flex flex-wrap gap-2">
-                    {stage.highlights.map((item) => (
-                      <span
-                        key={item}
-                        className="text-[11px] font-mono text-slate-200 bg-white/10 px-2.5 py-1 rounded-md border border-white/15 backdrop-blur-sm shadow-sm"
-                      >
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Technical Metric Strip (small glass chip) */}
-                  <div className="relative mt-4 text-[11px] font-mono text-slate-200 bg-black/40 py-2 px-3 rounded-lg border border-white/15 backdrop-blur-md flex items-center justify-between shadow-sm">
-                    <span className="drop-shadow-sm">{stage.metric}</span>
-                    <span className="text-slate-400 font-mono">0{idx + 1} / 06</span>
-                  </div>
-
-                  <div className="relative mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
-                    <Link
-                      href="/explore"
-                      className="text-xs font-medium text-slate-200 hover:text-white transition-colors flex items-center gap-1.5 drop-shadow-sm"
-                    >
-                      Explore catalogue
-                      <ArrowRight size={13} className="text-slate-300" />
-                    </Link>
-
-                    <Link
-                      href="/upload"
-                      className="text-xs font-semibold px-4 py-2 bg-white text-black hover:bg-slate-200 rounded-md transition-colors flex items-center gap-2 shadow-lg"
-                    >
-                      <Upload size={13} />
-                      Upload 3D STL
-                    </Link>
-                  </div>
+            {/* Stages 01–04: spec scenes */}
+            {STAGES.map((stage, idx) => {
+              const opacity = getStageOpacity(idx);
+              return (
+                <div
+                  key={stage.step}
+                  className="absolute inset-0"
+                  style={{
+                    visibility: opacity > 0.01 ? 'visible' : 'hidden',
+                    pointerEvents: opacity > 0.5 ? 'auto' : 'none',
+                  }}
+                >
+                  <SpecStageScene stage={stage} o={opacity} />
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+
+            {/* Stage 05: pricing scene */}
+            <div
+              className="absolute inset-0"
+              style={{
+                visibility: pricingOpacity > 0.01 ? 'visible' : 'hidden',
+                pointerEvents: pricingOpacity > 0.5 ? 'auto' : 'none',
+              }}
+            >
+              <PricingScene o={pricingOpacity} tiers={PRICING_TIERS} />
+            </div>
+
+            {/* Stage 06: directory / footer scene */}
+            <div
+              className="absolute inset-0"
+              style={{
+                visibility: footerOpacity > 0.01 ? 'visible' : 'hidden',
+                pointerEvents: footerOpacity > 0.5 ? 'auto' : 'none',
+              }}
+            >
+              <FooterScene o={footerOpacity} />
+            </div>
+          </div>
 
           {/* Scroll Cue (Fades out when scrubbing begins) */}
-          <div 
+          <div
             className="absolute -bottom-10 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[11px] font-mono text-slate-300 tracking-wider pointer-events-none transition-opacity duration-300 drop-shadow-sm"
             style={{ opacity: scrollProgress < 0.05 ? 1 : 0 }}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-white/80 animate-ping" />
             <span>SCROLL OR USE ARROW KEYS TO INSPECT HARDWARE</span>
-          </div>
-
-          {/* ─── Stage 05: Sizing & Dimension Rates (Transparent Frosted Glass) ─── */}
-          <div
-            className="absolute inset-x-0 mx-auto max-w-3xl"
-            style={{
-              opacity: pricingOpacity,
-              visibility: pricingOpacity > 0.01 ? 'visible' : 'hidden',
-              pointerEvents: pricingOpacity > 0.5 ? 'auto' : 'none',
-            }}
-          >
-            <div className="relative bg-[#0b0f19]/55 backdrop-blur-md border border-white/15 rounded-2xl p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
-              <HudFrame />
-              <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-6">
-                <div>
-                  <h2 className="text-lg font-semibold text-white drop-shadow-sm">Select Frame Dimensions</h2>
-                  <p className="text-xs text-slate-300 mt-0.5">Every unit includes high-resolution relief mapping, custom stand, and warm LED base.</p>
-                </div>
-                <Link
-                  href="/explore"
-                  className="text-xs text-slate-300 hover:text-white transition-colors"
-                >
-                  View All Products →
-                </Link>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {PRICING_TIERS.map((tier) => (
-                  <div
-                    key={tier.id}
-                    className={`p-5 rounded-xl border flex flex-col justify-between transition-all ${
-                      tier.popular
-                        ? 'border-white/30 bg-white/15 shadow-xl ring-1 ring-white/25'
-                        : 'border-white/10 bg-black/50 hover:border-white/25'
-                    }`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-semibold text-white">{tier.name}</h3>
-                        {tier.popular && (
-                          <span className="text-[10px] uppercase font-semibold text-white bg-slate-800/80 px-1.5 py-0.5 rounded border border-white/20">
-                            Standard
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-300 mt-1">{tier.size}</p>
-                      <div className="mt-3 text-xl font-semibold text-white">
-                        ₹{tier.price}
-                      </div>
-                    </div>
-
-                    <Link
-                      href="/upload"
-                      className={`mt-4 w-full py-2 rounded text-xs font-medium text-center transition-colors shadow-md ${
-                        tier.popular
-                          ? 'bg-white hover:bg-slate-200 text-slate-950 font-semibold'
-                          : 'bg-white/10 hover:bg-white/15 text-slate-200'
-                      }`}
-                    >
-                      Customize {tier.name}
-                    </Link>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-300">
-                <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1.5">
-                    <Clock size={13} className="text-slate-400" />
-                    8-Hour Express delivery in Bangalore
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <Shield size={13} className="text-slate-400" />
-                    Verified layer inspection
-                  </span>
-                </div>
-                <Link
-                  href="/zones"
-                  className="text-slate-200 hover:underline"
-                >
-                  Check pin code eligibility →
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* ─── Stage 06: Fused In-Place Footer (Transparent Frosted Glass) ─── */}
-          <div
-            className="absolute inset-x-0 mx-auto max-w-4xl"
-            style={{
-              opacity: footerOpacity,
-              visibility: footerOpacity > 0.01 ? 'visible' : 'hidden',
-              pointerEvents: footerOpacity > 0.5 ? 'auto' : 'none',
-            }}
-          >
-            <div className="relative bg-[#0b0f19]/55 backdrop-blur-md border border-white/15 rounded-2xl p-6 sm:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.6)] ring-1 ring-white/10">
-              <HudFrame />
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-white/10">
-                {/* Brand Column */}
-                <div className="md:col-span-2 space-y-3">
-                  <div className="text-base font-semibold text-white tracking-tight drop-shadow-sm">
-                    TechAZsure 3D Print
-                  </div>
-                  <p className="text-xs text-slate-300 leading-relaxed max-w-sm">
-                    {siteContent.footer.description}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-slate-300 pt-1">
-                    <span className="flex items-center gap-1.5">
-                      <MapPin size={12} className="text-slate-400" />
-                      Bangalore, India
-                    </span>
-                    <a href={`mailto:${siteContent.footer.email}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
-                      <Mail size={12} className="text-slate-400" />
-                      {siteContent.footer.email}
-                    </a>
-                  </div>
-                </div>
-
-                {/* Navigation Columns */}
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
-                    Store
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-slate-300">
-                    <li><Link href="/explore" className="hover:text-white transition-colors">All Products</Link></li>
-                    <li><Link href="/upload" className="hover:text-white transition-colors">Custom STL Upload</Link></li>
-                    <li><Link href="/zones" className="hover:text-white transition-colors">Delivery Zones</Link></li>
-                  </ul>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="text-xs font-semibold text-slate-200 uppercase tracking-wider">
-                    Company
-                  </div>
-                  <ul className="space-y-1.5 text-xs text-slate-300">
-                    <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-                    <li><a href={`tel:${siteContent.footer.phone.replace(/\s+/g, '')}`} className="hover:text-white transition-colors">Support</a></li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Sub-footer copyright */}
-              <div className="pt-4 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 gap-2">
-                <span>© {new Date().getFullYear()} TechAZsure Technologies Pvt. Ltd. All rights reserved.</span>
-                <div className="flex items-center gap-4">
-                  <Link href="/upload" className="text-slate-200 hover:text-white transition-colors font-medium">Start Instant Custom Order →</Link>
-                </div>
-              </div>
-            </div>
           </div>
 
         </div>
@@ -625,7 +405,7 @@ export default function Fused3DScrollExperience() {
           {/* Interactive Scrub Track */}
           <div className="flex items-center gap-3 font-mono text-[11px] text-slate-300">
             <span>{Math.round(scrollProgress * 100)}%</span>
-            <div 
+            <div
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));

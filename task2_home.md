@@ -54,6 +54,18 @@ This note is mirrored in `README.md` and `PROJECT.md`.
   - HUD corner brackets + periodic specular edge sweep (`HudFrame`) on all content zones
   - Pricing & footer panels: clearer glass (55% fill, `backdrop-blur-md`)
 - [x] PR opened: https://github.com/gytdrop/3d_print_ecommerce/pull/2
+- [x] Ungrouped scene pass (owner feedback, round 3 — "big card feels unsettling"):
+  - New `frontend/components/home/StageScenes.tsx` — every card decomposed into
+    independent free-positioned elements (tag, badge, ghost step numeral, title,
+    description, highlight chips, metric, CTAs, link columns, copyright)
+  - Scrub-reversible choreography: per-element `opacity^k` stagger + directional
+    drift `(1-o)·(dx,dy)` driven by the scroll lerp (Apple / antigravity model —
+    plays identically forwards and backwards, unlike CSS keyframe delays)
+  - Pricing: 3 tier chips scattered at staggered heights (middle raised);
+    footer: brand lower-left, link columns upper-right, copyright + CTA bottom
+  - Scene zone reserves rail space on xl+ (`xl:left-56 xl:right-56`); rail
+    recede behavior removed (no more collisions, FIG.05/06 fully visible)
+  - Mobile (< md): compact stacked fallbacks, one small glass panel per stage
 - [ ] Owner review on dev server
 
 ## Log
