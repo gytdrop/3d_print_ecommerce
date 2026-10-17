@@ -100,6 +100,13 @@ This note is mirrored in `README.md` and `PROJECT.md`.
   rebuild; `lampOn` is captured inside the texture-load callback (toggle during load
   can go stale); crop changes rebuild the whole group instead of swapping maps.
 
+- [x] `/lamp` 3D preview studio backdrop (round 8, owner report: "bg so black the black
+  frame is not visible"): preview container `#0a0d14` → radial `#2b3344 → #171c27 →
+  #0c0f16`; scene gets hemisphere fill, key light with PCF soft shadow, cool + warm rim
+  lights, a ground disc catching the contact shadow, and 16 % white edge outlines on the
+  box walls so the Matte Black finish (`#1a1d23`) always separates from the backdrop.
+  Verified in-browser across all finishes/sizes/orientations with no Three.js errors.
+
 ## Pending
 
 - [ ] Final owner review of PR #2 on the dev server → merge to `master`
