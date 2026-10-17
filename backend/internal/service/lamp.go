@@ -21,9 +21,9 @@ type LampSize struct {
 
 // LampSizes is the fixed Photo Lamp Frame pricing matrix (photo-lamp-spec.md).
 var LampSizes = map[string]LampSize{
-	"small":  {PanelWidthMm: 100, PanelHeightMm: 80, BoxDepthMm: 55, Price: 499, NominalVolumeCm3: 42},
-	"medium": {PanelWidthMm: 150, PanelHeightMm: 100, BoxDepthMm: 55, Price: 799, NominalVolumeCm3: 78},
-	"large":  {PanelWidthMm: 200, PanelHeightMm: 150, BoxDepthMm: 60, Price: 1299, NominalVolumeCm3: 142},
+	"small":  {PanelWidthMm: 100, PanelHeightMm: 80, BoxDepthMm: 30, Price: 499, NominalVolumeCm3: 42},
+	"medium": {PanelWidthMm: 150, PanelHeightMm: 100, BoxDepthMm: 30, Price: 799, NominalVolumeCm3: 78},
+	"large":  {PanelWidthMm: 200, PanelHeightMm: 150, BoxDepthMm: 30, Price: 1299, NominalVolumeCm3: 142},
 }
 
 // LampBoxColors enumerates the box color/finish options offered in v1.

@@ -20,9 +20,9 @@ export interface LampSizeConfig {
 }
 
 export const LAMP_SIZES: Record<LampSizeId, LampSizeConfig> = {
-  small:  { label: 'Small',  panelWcm: 10, panelHcm: 8,  depthCm: 5.5, price: 499 },
-  medium: { label: 'Medium', panelWcm: 15, panelHcm: 10, depthCm: 5.5, price: 799, popular: true },
-  large:  { label: 'Large',  panelWcm: 20, panelHcm: 15, depthCm: 6,   price: 1299 },
+  small:  { label: 'Small',  panelWcm: 10, panelHcm: 8,  depthCm: 3, price: 499 },
+  medium: { label: 'Medium', panelWcm: 15, panelHcm: 10, depthCm: 3, price: 799, popular: true },
+  large:  { label: 'Large',  panelWcm: 20, panelHcm: 15, depthCm: 3, price: 1299 },
 };
 
 export const BOX_COLORS: { id: LampBoxColor; label: string; hex: string }[] = [

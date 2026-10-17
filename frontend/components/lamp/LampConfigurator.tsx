@@ -465,10 +465,11 @@ export default function LampConfigurator({ initialSize }: { initialSize?: string
               orientation={orientation}
               boxColor={boxColor}
               lampOn={lampOn}
+              onToggleLamp={() => setLampOn((v) => !v)}
             />
           </div>
           <p className="text-[10px] text-[var(--text-muted)] mt-2 text-center">
-            Drag to orbit · scroll to zoom · warm-white USB-C LED included with every lamp
+            Drag to orbit · scroll to zoom · click the switch on the side of the box to light the lamp
           </p>
         </div>
       </div>

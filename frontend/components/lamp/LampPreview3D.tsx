@@ -13,7 +13,12 @@ interface LampPreview3DProps {
   orientation: LampOrientation;
   boxColor: LampBoxColor;
   lampOn: boolean;
+  /** Called when the physical switch on the side of the box is clicked. */
+  onToggleLamp?: () => void;
 }
+
+/** Yellowish-orange LED glow (user-specified warm light). */
+const GLOW_COLOR = 0xffa733;
 
 /**
  * Orbitable preview of the cuboidal lamp box with the photo-displaced
@@ -26,14 +31,22 @@ export default function LampPreview3D({
   orientation,
   boxColor,
   lampOn,
+  onToggleLamp,
 }: LampPreview3DProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [webglFailed, setWebglFailed] = useState(false);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const groupRef = useRef<THREE.Group | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const panelMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
   const innerLightRef = useRef<THREE.PointLight | null>(null);
+  const switchMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
+
+  // Keep the latest toggle callback reachable from the long-lived canvas
+  // event listeners without re-running the setup effect.
+  const onToggleRef = useRef(onToggleLamp);
+  onToggleRef.current = onToggleLamp;
 
   // ── One-time scene / renderer setup ────────────────────────────────────────
   useEffect(() => {
@@ -63,6 +76,7 @@ export default function LampPreview3D({
       100,
     );
     camera.position.set(0.9, 0.7, 2.6);
+    cameraRef.current = camera;
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.55));
     const key = new THREE.DirectionalLight(0xffffff, 1.1);
@@ -77,6 +91,41 @@ export default function LampPreview3D({
     controls.enablePan = false;
     controls.minDistance = 1.2;
     controls.maxDistance = 5;
+
+    // ── Physical switch interaction (raycast picking) ────────────────────────
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    let downX = 0;
+    let downY = 0;
+
+    const pickSwitch = (e: PointerEvent): boolean => {
+      const group = groupRef.current;
+      const cam = cameraRef.current;
+      if (!group || !cam) return false;
+      const rect = renderer.domElement.getBoundingClientRect();
+      ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(ndc, cam);
+      return raycaster
+        .intersectObjects(group.children, true)
+        .some((hit) => hit.object.name === 'lamp-switch');
+    };
+
+    const onPointerDown = (e: PointerEvent) => {
+      downX = e.clientX;
+      downY = e.clientY;
+    };
+    const onPointerUp = (e: PointerEvent) => {
+      // Only treat it as a click when the pointer barely moved (not an orbit drag).
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return;
+      if (pickSwitch(e)) onToggleRef.current?.();
+    };
+    const onPointerMove = (e: PointerEvent) => {
+      renderer.domElement.style.cursor = pickSwitch(e) ? 'pointer' : 'grab';
+    };
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    renderer.domElement.addEventListener('pointerup', onPointerUp);
+    renderer.domElement.addEventListener('pointermove', onPointerMove);
 
     let frameId: number;
     const animate = () => {
@@ -98,6 +147,9 @@ export default function LampPreview3D({
     return () => {
       cancelAnimationFrame(frameId);
       resizeObserver.disconnect();
+      renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('pointerup', onPointerUp);
+      renderer.domElement.removeEventListener('pointermove', onPointerMove);
       controls.dispose();
       renderer.dispose();
       if (renderer.domElement.parentElement === mount) {
@@ -153,12 +205,14 @@ export default function LampPreview3D({
     addWall(w + 2 * t, t, d, 0, (h + t) / 2, 0);
     addWall(w + 2 * t, t, d, 0, -(h + t) / 2, 0);
 
-    // Lithophane panel seated in the open front face.
+    // Lithophane panel seated in the open front face. The photo renders on
+    // the front (color map) with the 2.5D carve (displacement + bump); when
+    // the lamp is on, the same photo glows yellowish-orange from inside.
     const panelMat = new THREE.MeshStandardMaterial({
       color: 0xf5f2ec,
       roughness: 0.92,
       metalness: 0,
-      emissive: new THREE.Color(0xffb36b),
+      emissive: new THREE.Color(GLOW_COLOR),
       emissiveIntensity: 0,
     });
     panelMatRef.current = panelMat;
@@ -166,6 +220,7 @@ export default function LampPreview3D({
     if (textureDataUrl) {
       new THREE.TextureLoader().load(textureDataUrl, (tex) => {
         tex.colorSpace = THREE.SRGBColorSpace;
+        panelMat.map = tex;
         panelMat.emissiveMap = tex;
         panelMat.bumpMap = tex;
         panelMat.bumpScale = 0.4;
@@ -181,8 +236,34 @@ export default function LampPreview3D({
     panel.position.set(0, 0, d / 2 - 0.01);
     group.add(panel);
 
-    // Warm LED glow inside the box.
-    const innerLight = new THREE.PointLight(0xffb36b, lampOn ? 2.2 : 0, 3);
+    // Physical light switch on the right side face of the box: a base ring
+    // and a protruding button. Named 'lamp-switch' for raycast picking.
+    const switchX = w / 2 + t; // outer surface of the right wall
+    const switchBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.085, 0.085, 0.025, 24),
+      new THREE.MeshStandardMaterial({ color: 0x2a2f3a, roughness: 0.5, metalness: 0.4 }),
+    );
+    switchBase.rotation.z = Math.PI / 2; // cylinder axis along x
+    switchBase.position.set(switchX + 0.012, 0, 0);
+    switchBase.name = 'lamp-switch';
+    group.add(switchBase);
+
+    const switchMat = new THREE.MeshStandardMaterial({
+      color: 0x8a8f99,
+      roughness: 0.4,
+      metalness: 0.3,
+      emissive: new THREE.Color(GLOW_COLOR),
+      emissiveIntensity: lampOn ? 0.9 : 0,
+    });
+    switchMatRef.current = switchMat;
+    const switchBtn = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 0.07, 24), switchMat);
+    switchBtn.rotation.z = Math.PI / 2;
+    switchBtn.position.set(switchX + 0.045, 0, 0);
+    switchBtn.name = 'lamp-switch';
+    group.add(switchBtn);
+
+    // Yellowish-orange LED glow inside the box.
+    const innerLight = new THREE.PointLight(GLOW_COLOR, lampOn ? 2.2 : 0, 3);
     innerLight.position.set(0, 0, 0);
     group.add(innerLight);
     innerLightRef.current = innerLight;
@@ -200,6 +281,10 @@ export default function LampPreview3D({
     }
     if (innerLightRef.current) {
       innerLightRef.current.intensity = lampOn ? 2.2 : 0;
+    }
+    if (switchMatRef.current) {
+      switchMatRef.current.emissiveIntensity = lampOn ? 0.9 : 0;
+      switchMatRef.current.needsUpdate = true;
     }
   }, [lampOn]);
 
