@@ -99,6 +99,11 @@ Combines the interactive showcase feel of [`antigravity.google`](https://antigra
 - [ ] **Automated CI/CD Pipeline**:
   - GitHub Actions workflow for building Docker images and running Go unit/integration tests on push.
 
+### Phase 3: Photo Lamp Frame Product (Spec Complete — see `photo-lamp-spec.md`)
+- [x] **PRD finalized (2026-10-17)**: Dedicated `/lamp` flow — photo import with aspect-locked crop UI, live Three.js backlit 3D preview (lamp on/off), server-side lithophane STL generation in Go, fixed 3-size matrix pricing (S 10×8cm ₹499, M 15×10cm ₹799, L 20×15cm ₹1299), slide-in rail cuboidal box with warm-white USB-C LED, orders via `product_type = 'photo_lamp'`.
+- [ ] **Implementation (P0)**: `/lamp` page, photo validation & crop, 3D preview, Go lithophane STL generator, orders schema extension, homepage Stage 05 CTA + `/explore` card entry points.
+- [ ] **Blocking inputs before build**: measured USB-C LED module dimensions (box depth/rails); panel thickness min/max vs glow quality.
+
 ---
 
 ## 6. How to Run & Verify
